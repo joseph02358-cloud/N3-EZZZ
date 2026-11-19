@@ -1,0 +1,1932 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Belajar Bahasa Jepang</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; color: #333; }
+        h1, h2 { color: #333; text-align: center; }
+
+        /* HOME VIEW */
+        #home-view { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 600px; margin-top: 40px; }
+        .home-choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; margin-top: 24px; }
+        .home-card-btn { padding: 36px 20px; font-size: 22px; font-weight: bold; border: none; border-radius: 14px; cursor: pointer; color: white; box-shadow: 0 6px 14px rgba(0,0,0,0.1); transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .home-card-btn:hover { transform: translateY(-3px); opacity: 0.95; }
+        .home-card-sub { font-size: 13px; font-weight: normal; opacity: 0.9; }
+        .btn-home-bunpou { background-color: #2c3e50; }
+        .btn-home-kotoba { background-color: #3498db; }
+
+        /* MENU UTAMA KOTOBA (DAY 1 - 70) */
+        #menu-view { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 800px; }
+        .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; width: 100%; margin-top: 20px; }
+        .day-btn { padding: 15px 5px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-align: center; color: white; transition: 0.2s; }
+        .day-active { background-color: #3498db; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .day-active:hover { background-color: #2980b9; transform: translateY(-2px); }
+        .day-locked { background-color: #bdc3c7; cursor: not-allowed; }
+
+        /* FLASHCARD VIEW KOTOBA */
+        #flashcard-view { display: none; flex-direction: column; align-items: center; width: 100%; }
+        .status { margin-bottom: 15px; font-size: 15px; color: #666; font-weight: bold; }
+
+        .card-container { perspective: 1000px; width: 350px; max-width: 100%; height: 220px; margin-bottom: 16px; cursor: pointer; }
+        .card { width: 100%; height: 100%; transition: transform 0.5s; transform-style: preserve-3d; position: relative; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        .card.is-flipped { transform: rotateY(180deg); }
+
+        .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 15px; text-align: center; padding: 20px; box-sizing: border-box; }
+
+        .card-front { background-color: white; color: #2c3e50; border: 2px solid #e0e0e0; font-size: 40px; font-weight: bold; }
+        .card-back { background-color: #4CAF50; color: white; transform: rotateY(180deg); flex-direction: column; justify-content: center; gap: 12px; position: relative; }
+        .bacaan-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .bacaan-jepang { font-size: 30px; font-weight: bold; color: #fff59d; }
+        .arti-indo { font-size: 19px; line-height: 1.4; }
+
+        .btn-speak { background: rgba(255, 255, 255, 0.2); border: none; border-radius: 50%; width: 32px; height: 32px; padding: 0; font-size: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: none; color: white; }
+        .btn-speak:hover { background: rgba(255, 255, 255, 0.35); }
+
+        .autoplay-controls { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 18px; background: white; padding: 5px 10px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); border: 1px solid #e0e0e0; }
+        .btn-play { background-color: #9b59b6; padding: 5px 12px; font-size: 12px; border-radius: 14px; box-shadow: none; min-width: 72px; }
+        .btn-play.playing { background-color: #e67e22; }
+        .speed-select { padding: 3px 6px; font-size: 12px; font-weight: 600; border-radius: 12px; border: 1px solid #ddd; color: #555; background: #f9f9f9; cursor: pointer; outline: none; }
+
+        .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        button { padding: 12px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; color: white; transition: opacity 0.2s, background-color 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        button:hover { opacity: 0.9; }
+
+        .btn-back { background-color: #7f8c8d; }
+        .btn-belum { background-color: #e74c3c; }
+        .btn-ingat { background-color: #2ecc71; }
+        .btn-menu { background-color: #34495e; margin-bottom: 15px; padding: 8px 16px; font-size: 14px; }
+
+        .toast-msg { min-height: 20px; font-size: 13px; color: #e67e22; font-weight: 600; margin-bottom: 8px; text-align: center; }
+
+        /* BUNPOU LIST VIEW (SIMPLE) */
+        #bunpou-list-view { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 700px; }
+        .bunpou-list { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 12px; }
+        .bunpou-title-btn { width: 100%; text-align: left; background-color: white; color: #2c3e50; border: 1px solid #e0e0e0; padding: 14px 18px; border-radius: 10px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.04); cursor: pointer; transition: 0.15s; }
+        .bunpou-title-btn:hover { background-color: #f8fafc; border-color: #3498db; }
+
+        /* BUNPOU DETAIL VIEW (SIMPLE) */
+        #bunpou-detail-view { display: none; flex-direction: column; align-items: flex-start; width: 100%; max-width: 700px; }
+        .bunpou-card { width: 100%; background-color: white; border-radius: 12px; padding: 24px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .bunpou-card h2 { text-align: left; margin-top: 0; color: #2c3e50; font-size: 24px; border-bottom: 1px solid #eee; padding-bottom: 12px; }
+        .bunpou-section { margin-top: 18px; }
+        .bunpou-section-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #7f8c8d; margin-bottom: 8px; }
+        .bunpou-text { font-size: 15px; line-height: 1.6; color: #333; white-space: pre-line; }
+        .bunpou-example { background-color: #f8f9fa; border-left: 3px solid #3498db; padding: 10px 14px; border-radius: 6px; margin-bottom: 10px; }
+        .bunpou-jp { font-size: 17px; line-height: 2; color: #1e293b; margin: 0 0 4px 0; }
+        .bunpou-id { font-size: 14px; color: #555; margin: 0; }
+        .bunpou-tag { display: inline-block; font-size: 11px; font-weight: bold; color: #2980b9; background-color: #e8f4fc; padding: 2px 8px; border-radius: 10px; margin-bottom: 4px; }
+        ruby { ruby-align: center; }
+        rt { font-size: 0.6em; color: #64748b; }
+
+        @media (max-width: 480px) {
+            .home-choices { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HALAMAN HOME -->
+    <div id="home-view">
+        <h1>Aplikasi Belajar Bahasa Jepang</h1>
+        <p style="color:#666; margin-top:0;">Pilih materi yang ingin dipelajari</p>
+        <div class="home-choices">
+            <button class="home-card-btn btn-home-bunpou" onclick="openBunpou()">
+                <span>Bunpou</span>
+                <span class="home-card-sub">Tata Bahasa N3 (48 Materi)</span>
+            </button>
+            <button class="home-card-btn btn-home-kotoba" onclick="openKotoba()">
+                <span>Kotoba</span>
+                <span class="home-card-sub">Flashcard Kosakata</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- HALAMAN DAFTAR BUNPOU (HANYA JUDUL) -->
+    <div id="bunpou-list-view">
+        <button class="btn-menu" onclick="goHome()">← Kembali ke Home</button>
+        <h1 style="margin: 5px 0 10px 0;">Bunpou N3</h1>
+        <div class="bunpou-list" id="bunpou-list"></div>
+    </div>
+
+    <!-- HALAMAN PENJELASAN BUNPOU -->
+    <div id="bunpou-detail-view">
+        <button class="btn-menu" onclick="backToBunpouList()">← Kembali ke Daftar Bunpou</button>
+        <div class="bunpou-card" id="bunpou-detail-content"></div>
+    </div>
+
+    <!-- TAMPILAN MENU KOTOBA -->
+    <div id="menu-view">
+        <button class="btn-menu" onclick="goHome()">← Kembali ke Home</button>
+        <h1 style="margin: 5px 0;">Pilih Sesi Belajar</h1>
+        <p style="margin-top: 5px;">Target: 70 Hari</p>
+        <div class="grid-container" id="day-grid"></div>
+    </div>
+
+    <!-- TAMPILAN FLASHCARD KOTOBA -->
+    <div id="flashcard-view">
+        <button class="btn-menu" onclick="backToMenu()">☰ Kembali ke Menu</button>
+        <h2 id="current-day-title" style="margin: 5px 0;">Day X</h2>
+        <div class="status" id="status-text">Memuat...</div>
+        <div class="toast-msg" id="toast-msg"></div>
+
+        <div class="card-container" onclick="manualFlip()">
+            <div class="card" id="flashcard">
+                <div class="card-face card-front" id="card-front"></div>
+                <div class="card-face card-back" id="card-back"></div>
+            </div>
+        </div>
+
+        <div class="autoplay-controls" id="autoplay-panel">
+            <button class="btn-play" id="btn-play" onclick="toggleAutoPlay()">▶ Play</button>
+            <select class="speed-select" id="speed-select" onchange="changeSpeed()" title="Kecepatan Auto Play">
+                <option value="3200">0.75x</option>
+                <option value="2200" selected>1x</option>
+                <option value="1400">1.5x</option>
+            </select>
+        </div>
+
+        <div class="controls" id="controls">
+            <button class="btn-back" onclick="goBack()">⟲ Back</button>
+            <button class="btn-belum" onclick="markBelum()">Belum ✖</button>
+            <button class="btn-ingat" onclick="markIngat()">Ingat ✔</button>
+        </div>
+    </div>
+
+    <script>
+        const r = (kanji, reading) => `<ruby>${kanji}<rt>${reading}</rt></ruby>`;
+
+        // DATA BUNPOU N3 (48 MATERI)
+        const bunpouData = [
+            {
+                id: 1,
+                title: "1. 〜からといって",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ＋だ\nKata Benda - ＋だ",
+                penjelasan: "Menyatakan bahwa hanya karena alasan A, bukan berarti B (yang biasanya diasosiasikan dengan A) pasti benar atau terjadi.",
+                tips: "Biasanya digunakan untuk menolak alasan yang terlalu sederhana atau terlalu umum.\nSering diikuti dengan:\n〜必ずしも〜ない\n〜とは限らない\n〜わけではない\n〜とは言えない",
+                examples: [
+                    { jp: `お${r("金","かね")}があるからといって、${r("幸","しあわ")}せとは${r("限","かぎ")}らない。`, id: "Hanya karena punya uang, bukan berarti pasti bahagia." },
+                    { jp: `${r("留学","りゅうがく")}したからといって、${r("必","かなら")}ずしも${r("外国語","がいこくご")}が${r("上手","じょうず")}になるとは${r("限","かぎ")}らない。`, id: "Hanya karena pernah studi ke luar negeri bukan berarti pasti jadi mahir bahasa asing." },
+                    { jp: `${r("忙","いそが")}しいからといって、${r("食事","しょくじ")}を${r("抜","ぬ")}くのはよくない。`, id: "Hanya karena sibuk, bukan berarti boleh melewatkan makan. (食事を抜く = skip makan)" }
+                ],
+                jlpt: [
+                    { jp: `${r("安","やす")}いからといって、${r("必要","ひつよう")}のない${r("物","もの")}やしまう${r("場所","ばしょ")}のない${r("物","もの")}を${r("次々","つぎつぎ")}と${r("買","か")}えば、${r("部屋","へや")}が${r("片付","かたづ")}かないのは${r("当然","とうぜん")}だ。`, id: "Hanya karena murah, kalau kita terus-menerus membeli barang yang tidak perlu atau barang yang tidak ada tempat menyimpannya, wajar saja kalau kamar jadi tidak pernah rapi.", tag: "JLPT N3 · Des 2021" }
+                ]
+            },
+            {
+                id: 2,
+                title: "2. 〜ことから",
+                rumus: "Kata Kerja Bentuk Biasa ＋ことから\nKata Sifat i - 🔺(secara rumus bisa, tapi tidak lazim digunakan)\nKata Sifat na - ＋な\nKata Benda ＋から",
+                penjelasan: "Menunjukkan alasan, sebab, atau asal mula sesuatu terjadi.",
+                tips: "Anggap bunpou ini adalah penggabungan \"から - dari\" dan \"から - alasan\".\nから pada N5 menjawab pertanyaan \"Kenapa?\" sedangkan から・ことから menjawab pertanyaan \"Dari mana?\"",
+                examples: [
+                    { jp: `この${r("坂","さか")}は${r("富士山","ふじさん")}が${r("見","み")}えることから、「${r("富士見坂","ふじみざか")}」と${r("呼","よ")}ばれている。`, id: "Karena dari tanjakan ini bisa melihat Gunung Fuji, tanjakan ini disebut \"Fujimizaka.\" (Q : dari mana asal nama Fujimizaka ini?)" },
+                    { jp: `${r("声","こえ")}が${r("震","ふる")}えていたことから、${r("彼","かれ")}が${r("緊張","きんちょう")}しているのがわかった。`, id: "Dari suaranya yang bergetar, saya tahu bahwa dia sedang gugup. (Q : dari mana kamu tahu dia sedang gugup?)" }
+                ],
+                jlpt: [
+                    { jp: `この${r("島","しま")}は、${r("空","そら")}から${r("見","み")}ると${r("人","ひと")}の${r("耳","みみ")}のような${r("形","かたち")}に${r("見","み")}えることから「${r("耳島","みみとう")}」と${r("呼","よ")}ばれています。`, id: "Pulau ini disebut \"Pulau Telinga\" karena kalau dilihat dari langit, bentuknya kelihatan seperti telinga manusia.", tag: "JLPT N3" },
+                    { jp: `また${r("値段","ねだん")}がそれほど${r("高","たか")}くないことから${r("買","か")}っていく${r("学生","がくせい")}さんが${r("多","おお")}いようです。`, id: "Selain itu, karena harganya tidak terlalu mahal, sepertinya banyak juga mahasiswa yang membelinya.", tag: "JLPT N3 · Des 2024 · choukai" }
+                ]
+            },
+            {
+                id: 3,
+                title: "3. 〜のだから / 〜んだから",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ＋な\nKata Benda - ＋な",
+                penjelasan: "Menyatakan alasan yang dianggap sudah jelas, dan biasanya diikuti dengan nasihat, saran, penilaian, atau ungkapan emosi dari si pembicara.",
+                tips: "Versi emosional dari から.\nBiasanya pembicara berasumsi kalau lawan bicara juga sudah tahu akan hal yang dibicarakan.",
+                examples: [
+                    { jp: `${r("時間","じかん")}がないのだから、${r("急","いそ")}いで${r("準備","じゅんび")}しなさい。`, id: "Karena waktunya kan sedikit, cepat siap-siap ya!" },
+                    { jp: `${r("自分","じぶん")}で${r("選","えら")}んだ${r("道","みち")}なんだから、${r("最後","さいご")}まで${r("頑張","がんば")}るべきだよ。`, id: "Kan kamu sendiri yang memilih jalan ini, jadi harus berusaha sampai akhir." }
+                ],
+                jlpt: [
+                    { jp: `${r("日本各地","にほんかくち")}にはおいしい${r("食べ物","たべもの")}がたくさんあるのだから、そこにしかない${r("飲食店","いんしょくてん")}に${r("行","い")}くほうがいいと${r("思","おも")}いました。`, id: "Di berbagai daerah di Jepang kan banyak makanan enak, jadi menurutku lebih baik pergi ke tempat makan yang cuma ada di sana.", tag: "JLPT N3" },
+                    { jp: `${r("林","はやし")}さんは、${r("会議","かいぎ")}で${r("資料","しりょう")}のグラフについて${r("質問","しつもん")}されたときに、わからないと${r("言","い")}っていたが、${r("林","はやし")}さんが${r("作","つく")}ったグラフなのだから、わからないはずがないと${r("思","おも")}う。`, id: "Waktu ditanya soal grafik di materi rapat, Hayashi-san bilang nggak tahu, tapi grafik itu kan dia sendiri yang buat, jadi menurutku nggak mungkin dia nggak tahu.", tag: "JLPT N3 · Des 2025" }
+                ]
+            },
+            {
+                id: 4,
+                title: "4. そこで",
+                rumus: "",
+                penjelasan: "Menyatakan tindakan yang diambil untuk menanggapi atau mengatasi situasi yang disebutkan sebelumnya.",
+                tips: "Kalimat setelah そこで biasanya berupa keputusan atau tindakan, seperti 〜ことにした atau 〜てみた.\n\nPerbedaan だから、それで、そのため、したがって、そこで:\nだから - paling umum, kalimat setelahnya boleh berupa pendapat, permintaan, ajakan, atau perintah\nそれで - lisan, kalimat setelahnya adalah hasil yang sudah terjadi\nそのため - lebih formal, menyatakan sebab → akibat\nしたがって - paling formal, menyatakan kesimpulan yang logis\nそこで - kalimat setelahnya adalah tindakan untuk menanggapi situasi tadi\n\n⚠️ そこで yang berarti \"di sana\" (tempat) bukan kata sambung ini.",
+                examples: [
+                    { jp: `１${r("週間","しゅうかん")}たったが、${r("痛","いた")}みはなくならなかった。そこで、${r("病院","びょういん")}で${r("検査","けんさ")}を${r("受","う")}けることにした。`, id: "Sudah seminggu, tapi sakitnya tidak hilang. Makanya, aku memutuskan periksa ke rumah sakit." }
+                ],
+                jlpt: [
+                    { jp: `${r("昼寝","ひるね")}をすると${r("起","お")}きたあとの${r("集中力","しゅうちゅうりょく")}が${r("上","あ")}がるが、${r("長","なが")}く${r("寝","ね")}るのはよくない。そこで、${r("飲","の")}むと${r("目","め")}が${r("覚","さ")}めるというコーヒーの${r("効果","こうか")}を${r("利用","りよう")}するのだ。`, id: "Tidur siang memang bikin konsentrasi naik setelah bangun, tapi tidur terlalu lama itu tidak baik. Makanya, kita manfaatkan efek kopi yang katanya bikin melek kalau diminum.", tag: "JLPT N3 · Jul 2024" },
+                    { jp: `${r("私","わたし")}たち${r("夫婦","ふうふ")}の${r("夢","ゆめ")}は、${r("田舎","いなか")}に${r("引","ひ")}っ${r("越","こ")}して${r("農業","のうぎょう")}を${r("始","はじ")}めることです。そこで${r("先日","せんじつ")}、ある${r("町","まち")}が${r("東京","とうきょう")}で${r("開","ひら")}いた${r("説明会","せつめいかい")}に${r("参加","さんか")}してみました。`, id: "Mimpi kami berdua sebagai suami istri adalah pindah ke desa dan mulai bertani. Makanya, beberapa hari lalu kami coba ikut sesi penjelasan yang diadakan di Tokyo oleh sebuah kota dari daerah.", tag: "JLPT N3 · Des 2022" }
+                ]
+            },
+            {
+                id: 5,
+                title: "5. そのため（に）",
+                rumus: "",
+                penjelasan: "Menyatakan akibat yang terjadi karena sebab yang disebutkan sebelumnya, dengan gaya yang lebih formal.",
+                tips: "そのために juga bisa berarti \"untuk itu\" (tujuan), sama seperti ため（に） yang punya dua fungsi : \"karena\" dan \"demi; untuk\".\n\nPerbedaan だから、それで、そのため、したがって、そこで:\nだから - paling umum, kalimat setelahnya boleh berupa pendapat, permintaan, ajakan, atau perintah\nそれで - lisan, kalimat setelahnya adalah hasil yang sudah terjadi\nそのため - lebih formal, menyatakan sebab → akibat\nしたがって - paling formal, menyatakan kesimpulan yang logis\nそこで - kalimat setelahnya adalah tindakan untuk menanggapi situasi tadi",
+                examples: [
+                    { jp: `この${r("辺","あた")}りは${r("田舎","いなか")}で、${r("電車","でんしゃ")}やバスがない。そのため、${r("多","おお")}くの${r("人","ひと")}が${r("車","くるま")}を${r("使","つか")}っている。`, id: "Daerah sini pedesaan, tidak ada kereta maupun bus. Oleh karena itu, banyak orang pakai mobil." }
+                ],
+                jlpt: [
+                    { jp: `${r("天気予報","てんきよほう")}では、${r("明日","あした")}の${r("夜","よる")}、${r("台風","たいふう")}が${r("東京","とうきょう")}の${r("近","ちか")}くを${r("通","とお")}ることが${r("予想","よそう")}されています。そのため、あさってまで${r("交通機関","こうつうきかん")}に${r("影響","えいきょう")}が${r("残","のこ")}る${r("可能性","かのうせい")}があります。`, id: "Menurut prakiraan cuaca, besok malam topan diperkirakan lewat di dekat Tokyo. Oleh karena itu, ada kemungkinan transportasi masih terganggu sampai lusa.", tag: "JLPT N3 · Jul 2024" },
+                    { jp: `その${r("漫画","まんが")}は${r("全部","ぜんぶ")}で3${r("巻","かん")}もあり、しっかり${r("読","よ")}むのにはとても${r("時間","じかん")}がかかりました。そのために、ほかの${r("試験","しけん")}の${r("勉強","べんきょう")}ができなくなり、${r("寝","ね")}る${r("時間","じかん")}も${r("削","けず")}らなければならなくなりました。`, id: "Komik itu totalnya sampai 3 jilid, dan butuh waktu lama sekali untuk membacanya dengan teliti. Oleh karena itu, aku jadi tidak bisa belajar untuk ujian lain, bahkan harus mengurangi jam tidur.", tag: "JLPT N3 · Des 2023" }
+                ]
+            },
+            {
+                id: 6,
+                title: "6. だが",
+                rumus: "",
+                penjelasan: "Menyatakan kontradiksi antara Kalimat A dan Kalimat B, dengan gaya tulisan yang kaku.",
+                tips: "Bentuk biasa dari ですが.\n\nPerbedaan けれども、だが、だけど、ただし、ところが:\nけれども - netral dan cukup sopan, bisa lisan maupun tulisan\nだが - gaya tulisan, terdengar kaku kalau diucapkan\nだけど - gaya lisan, santai\nただし - bukan membantah, tapi menambahkan syarat atau pengecualian\nところが - kenyataannya berbeda dari dugaan, ada rasa kaget\n\n⚠️ 〜だが di tengah kalimat (学生だが、…) itu bunpou が dari Bunpou Dasar.",
+                examples: [],
+                jlpt: [
+                    { jp: `${r("近所","きんじょ")}には${r("電灯","でんとう")}もあるが、${r("少","すこ")}し${r("歩","ある")}くと、${r("家","いえ")}も${r("減","へ")}り、${r("灯","あか")}りもなくなるので、${r("持","も")}ってきた${r("懐中電灯","かいちゅうでんとう")}をつける。だが、${r("大","おお")}きな${r("丸","まる")}い${r("月","つき")}が${r("出","で")}る${r("満月","まんげつ")}の${r("夜","よる")}はちょっと${r("違","ちが")}う。`, id: "Di dekat rumah memang ada lampu jalan, tapi kalau jalan sedikit saja, rumah makin jarang dan lampu pun hilang, jadi aku menyalakan senter yang kubawa. Tetapi, malam bulan purnama saat bulan yang besar dan bulat muncul itu agak lain.", tag: "JLPT N3" },
+                    { jp: `それで、${r("体","からだ")}が${r("疲","つか")}れるまで${r("運動","うんどう")}をすれば、${r("布団","ふとん")}に${r("入","はい")}ってすぐに${r("眠","ねむ")}くなるだろうと${r("考","かんが")}えて、${r("寝","ね")}る1${r("時間前","じかんまえ")}に${r("走","はし")}ることにした。だが、2${r("週間続","しゅうかんつづ")}けてみても、${r("全然変","ぜんぜんか")}わらない。`, id: "Lalu, karena berpikir kalau berolahraga sampai badan lelah aku pasti langsung mengantuk begitu masuk ke futon, aku memutuskan untuk lari satu jam sebelum tidur. Tetapi, setelah kucoba dua minggu pun, sama sekali tidak ada perubahan.", tag: "JLPT N3 · Des 2022" }
+                ]
+            },
+            {
+                id: 7,
+                title: "7. だけど",
+                rumus: "",
+                penjelasan: "Menyatakan kontradiksi antara Kalimat A dan Kalimat B, dengan gaya lisan yang santai.",
+                tips: "Bentuk sopannya ですけど.\n\nPerbedaan けれども、だが、だけど、ただし、ところが:\nけれども - netral dan cukup sopan, bisa lisan maupun tulisan\nだが - gaya tulisan, terdengar kaku kalau diucapkan\nだけど - gaya lisan, santai\nただし - bukan membantah, tapi menambahkan syarat atau pengecualian\nところが - kenyataannya berbeda dari dugaan, ada rasa kaget\n\n⚠️ 〜だけど di tengah kalimat (学生だけど、…) itu bunpou けど dari Bunpou Dasar.",
+                examples: [
+                    { jp: `この${r("映画","えいが")}、おもしろそう。だけど、この${r("俳優","はいゆう")}はあまり${r("好","す")}きじゃない。`, id: "Film ini kelihatannya seru. Tetapi, aku kurang suka sama aktor ini." }
+                ],
+                jlpt: [
+                    { jp: `うん、だけど${r("行","い")}ってみたら、${r("池","いけ")}に${r("見","み")}たことない${r("珍","めずら")}しい${r("鳥","とり")}がいてね。`, id: "Iya, tapi waktu aku ke sana, ternyata di kolam ada burung langka yang belum pernah kulihat.", tag: "JLPT N3 · Des 2021 · choukai" }
+                ]
+            },
+            {
+                id: 8,
+                title: "8. 〜て以来（〜ていらい）",
+                rumus: "Kata Kerja - Vて",
+                penjelasan: "Menyatakan bahwa sesuatu terjadi pada waktu lampau, dan keadaan itu terus berlanjut sampai sekarang.",
+                tips: "Cara baca :\n以来 → いらい",
+                examples: [
+                    { jp: `${r("子供","こども")}が${r("生","う")}まれて${r("以来","いらい")}、${r("外","そと")}で${r("酒","さけ")}を${r("飲","の")}んでいない。`, id: "Sejak anak saya lahir, saya tidak pernah minum alkohol di luar rumah." },
+                    { jp: `あの${r("人","ひと")}と${r("別","わか")}れて${r("以来","いらい")}、${r("一度","いちど")}も${r("会","あ")}っていない。`, id: "Sejak berpisah dengannya, saya tidak pernah bertemu lagi sekalipun." },
+                    { jp: `${r("事故","じこ")}が${r("起","お")}きてこのかた、${r("現場","げんば")}は${r("立","た")}ち${r("入","い")}り${r("禁止","きんし")}になっている。`, id: "Sejak kecelakaan terjadi, lokasi kejadian telah dilarang untuk dimasuki." }
+                ],
+                jlpt: [
+                    { jp: `${r("実","じつ")}は、${r("母","はは")}は${r("半年前","はんとしぜん")}に${r("転","ころ")}んで${r("腕","うで")}を${r("骨折","こっせつ")}し、それ${r("以来","いらい")}すっかり${r("元気","げんき")}をなくしてしまっていた。`, id: "Sebenarnya, setengah tahun lalu ibuku jatuh dan lengannya patah, dan sejak itu dia jadi benar-benar tidak bersemangat.", tag: "JLPT N3 · Des 2021" }
+                ]
+            },
+            {
+                id: 9,
+                title: "9. 〜てもかまわない",
+                rumus: "Kata Kerja - Vて\nKata Sifat i - くて\nKata Sifat na - ＋で\nKata Benda - ＋で",
+                penjelasan: "Menyatakan bahwa sesuatu boleh dilakukan atau tidak menjadi masalah.",
+                tips: "Kanjinya → 構わない (berasal dari kotoba 構う - かまう)\nArtinya sama dengan てもいい (yang ada di Bunpou Dasar).\nBentuk lain yang artinya juga sama : てもいいです・ても大丈夫です・てもかまわないです・てもかまいません・てもよろしいですか\nKhusus untuk よろしい, bentuk ini lebih sering dipakai untuk meminta izin, jadi pakai か.\nBentuk 〜なくてもかまわない artinya «tidak ... juga tidak apa-apa», sama dengan なくてもいい.",
+                examples: [
+                    { jp: `ここに${r("座","すわ")}ってもかまいませんか。`, id: "Boleh saya duduk di sini?" },
+                    { jp: `${r("急","いそ")}がなくてもかまわないよ。`, id: "Nggak usah buru-buru juga nggak apa-apa, kok." }
+                ],
+                jlpt: [
+                    { jp: `あの、この${r("旅行","りょこう")}のパンフレット、${r("持","も")}って${r("帰","かえ")}っても${r("構","かま")}いませんか？`, id: "Permisi, boleh saya bawa pulang brosur perjalanan ini?", tag: "JLPT N3 · Des 2020 · choukai" },
+                    { jp: `もちろん、${r("日本","にほん")}の${r("料理","りょうり")}でもかまいませんよ。`, id: "Tentu saja, masakan Jepang juga tidak masalah.", tag: "JLPT N3 · Des 2019 · choukai" }
+                ]
+            },
+            {
+                id: 10,
+                title: "10. 〜おかげで / 〜おかげだ",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ＋な\nKata Benda - ＋の",
+                penjelasan: "Menyatakan bahwa suatu hasil yang baik terjadi berkat bantuan atau pengaruh positif dari seseorang atau sesuatu.",
+                tips: "",
+                examples: [
+                    { jp: `${r("先生","せんせい")}のおかげで、${r("合格","ごうかく")}することができました。`, id: "Berkat guru saya, saya bisa lulus." },
+                    { jp: `${r("友達","ともだち")}が${r("手伝","てつだ")}ってくれたおかげで、${r("引","ひ")}っ${r("越","こ")}しが${r("早","はや")}く${r("終","お")}わった。`, id: "Berkat bantuan teman saya, pindahan selesai dengan cepat." }
+                ],
+                jlpt: [
+                    { jp: `${r("優勝","ゆうしょう")}できたのは${r("皆","みな")}さんの${r("応援","おうえん")}のおかげです。`, id: "Saya bisa juara berkat dukungan kalian semua.", tag: "JLPT N3" },
+                    { jp: `${r("私","わたし")}たちの${r("生活","せいかつ")}は、${r("技術","ぎじゅつ")}の${r("進歩","しんぽ")}のおかげでとても${r("便利","べんり")}になった。`, id: "Berkat kemajuan teknologi, hidup kita jadi sangat praktis.", tag: "JLPT N3" }
+                ]
+            },
+            {
+                id: 11,
+                title: "11. 〜せいで / 〜せいだ",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ＋な\nKata Benda - ＋の",
+                penjelasan: "Menyatakan bahwa sesuatu yang buruk atau tidak diinginkan terjadi karena kesalahan atau pengaruh negatif dari seseorang, situasi, atau hal tertentu.",
+                tips: "",
+                examples: [
+                    { jp: `${r("雨","あめ")}のせいで、${r("試合","しあい")}が${r("中止","ちゅうし")}になった。`, id: "Gara-gara hujan, pertandingan dibatalkan." },
+                    { jp: `${r("寝坊","ねぼう")}したせいで、${r("約束","やくそく")}に${r("遅","おく")}れてしまった。`, id: "Gara-gara bangun kesiangan, saya jadi terlambat datang ke janji temu." }
+                ],
+                jlpt: [
+                    { jp: `${r("今朝","けさ")}は${r("電車","でんしゃ")}が${r("遅","おく")}れたせいで、${r("会社","かいしゃ")}に${r("遅刻","ちこく")}してしまった。`, id: "Gara-gara keretanya terlambat tadi pagi, aku jadi telat masuk kantor.", tag: "JLPT N3" },
+                    { jp: `${r("工事","こうじ")}のせいで${r("道路","どうろ")}が${r("渋滞","じゅうたい")}していて、${r("車","くるま")}がなかなか${r("前","まえ")}に${r("進","すす")}まない。`, id: "Gara-gara ada proyek konstruksi, jalannya macet dan mobil susah maju.", tag: "JLPT N3" }
+                ]
+            },
+            {
+                id: 12,
+                title: "12. ちっとも〜ない",
+                rumus: "",
+                penjelasan: "Menekankan bahwa sesuatu tidak terjadi sedikit pun, bahkan dalam jumlah atau tingkat yang paling kecil.",
+                tips: "Selalu dipasangkan dengan bentuk negatif (〜ない・〜ません).\nIni bahasa kaiwa yang kasual, versi formalnya adalah 少しも〜ない.\nBiasanya diucapkan dengan nada kesal, kecewa, atau heran dari pembicara.\n\nBedanya dengan 全然:\n全然〜ない - sama sekali tidak (paling umum)\nちっとも〜ない - tidak sedikit pun (ada perasaan pembicara di dalamnya)\n\n※ ini bukan typo ya, memang ちっとも tulisannya",
+                examples: [],
+                jlpt: [
+                    { jp: `${r("昨日","きのう")}${r("見","み")}た${r("映画","えいが")}は、${r("面白","おもしろ")}いと${r("聞","き")}いていたのにちっとも${r("面白","おもしろ")}くなかった。`, id: "Film yang kutonton kemarin katanya seru, tapi ternyata tidak seru sedikit pun.", tag: "JLPT N3" },
+                    { jp: `${r("和田","わだ")}さん、この${r("間","あいだ")}${r("貸","か")}してくれた${r("経済","けいざい")}の${r("本","ほん")}、ちっともわからなかったよ。`, id: "Wada-san, buku ekonomi yang kamu pinjamkan waktu itu, aku nggak paham sedikit pun.", tag: "JLPT N3 · Des 2023 · choukai" }
+                ]
+            },
+            {
+                id: 13,
+                title: "13. 一度も〜ない / 一回も〜ない",
+                rumus: "",
+                penjelasan: "Menekankan bahwa sesuatu tidak pernah atau belum pernah terjadi, bahkan satu kali pun.",
+                tips: "Selalu dipasangkan dengan bentuk negatif, paling sering 〜たことがない (belum pernah).\n一度（いちど） dan 一回（いっかい） artinya sama, 一度 sedikit lebih formal.\nも di sini adalah Partikel も \"bahkan satu pun tidak\" yang sudah kalian pelajari di N5-N4.",
+                examples: [
+                    { jp: `${r("日本","にほん")}に${r("来","き")}てから、${r("一度","いちど")}も${r("国","くに")}に${r("帰","かえ")}っていない。`, id: "Sejak datang ke Jepang, aku belum pulang ke negaraku sekali pun." },
+                    { jp: `あの${r("映画","えいが")}は${r("一回","いっかい")}も${r("見","み")}たことがない。`, id: "Film itu belum pernah kutonton sekali pun." }
+                ],
+                jlpt: [
+                    { jp: `そのガソリンスタンドで${r("友達","ともだち")}は、${r("一度","いちど")}も${r("車","くるま")}から${r("出","で")}ませんでした。`, id: "Di pom bensin itu, temanku tidak keluar dari mobil sekali pun.", tag: "JLPT N3 · Des 2023" }
+                ]
+            },
+            {
+                id: 14,
+                title: "14. 必ずしも〜ない",
+                rumus: "",
+                penjelasan: "Menyatakan bahwa sesuatu yang biasanya dianggap pasti, ternyata tidak selalu benar atau berlaku.",
+                tips: "Pada N2, 必ずしも sering dipasangkan dengan bunpou とは限らない\nSelain itu juga sering dipasangkan dengan 〜わけではない atau 〜ことではない\n必ずしも selalu diikuti bentuk negatif.\nHati-hati jangan sampai tertukar dengan 必ず (pasti; selalu) yang dipakai di kalimat positif.",
+                examples: [
+                    { jp: `お${r("金","かね")}がある${r("人","ひと")}が${r("必","かなら")}ずしも${r("幸","しあわ")}せとは${r("限","かぎ")}らない。`, id: "Orang yang kaya belum tentu bahagia." },
+                    { jp: `${r("留学","りゅうがく")}すれば${r("必","かなら")}ずしも${r("日本語","にほんご")}が${r("上手","うま")}くなるわけではない。`, id: "Pergi belajar ke luar negeri tidak selalu membuat seseorang pandai berbahasa Jepang." }
+                ],
+                jlpt: [
+                    { jp: `${r("自分","じぶん")}の${r("会社","かいしゃ")}をつくったと${r("言","い")}うとよく${r("驚","おどろ")}かれるが、${r("会社","かいしゃ")}をつくることが${r("必","かなら")}ずしも${r("難","むずか")}しいことではない。`, id: "Kalau aku bilang aku mendirikan perusahaan sendiri, orang sering kaget, tapi mendirikan perusahaan itu tidak selalu hal yang sulit.", tag: "JLPT N3" },
+                    { jp: `${r("昨日","きのう")}${r("読","よ")}んだ${r("雑誌","ざっし")}に、「${r("忘","わす")}れることは、${r("必","かなら")}ずしも${r("悪","わる")}いことではない」と${r("書","か")}いてあった。`, id: "Di majalah yang kubaca kemarin, tertulis \"Lupa itu tidak selalu hal yang buruk.\"", tag: "JLPT N3 · Jul 2024" }
+                ]
+            },
+            {
+                id: 15,
+                title: "15. 全く〜ない",
+                rumus: "",
+                penjelasan: "Menyatakan bahwa sesuatu sama sekali tidak terjadi atau tidak berlaku.",
+                tips: "Selalu dipasangkan dengan bentuk negatif (〜ない・〜ません・〜ずに).\n全く（まったく） lebih formal daripada 全然（ぜんぜん）, jadi sering muncul di tulisan resmi dan bacaan.\nDi luar kalimat negatif, 全く artinya «benar-benar», contoh 全く同じ → benar-benar sama.",
+                examples: [
+                    { jp: `${r("彼","かれ")}の${r("話","はなし")}は${r("全","まった")}く${r("信","しん")}じられない。`, id: "Saya sama sekali tidak bisa percaya ceritanya." },
+                    { jp: `この${r("映画","えいが")}は${r("全","まった")}く${r("面白","おもしろ")}くなかった。`, id: "Film ini tidak menarik sama sekali." }
+                ],
+                jlpt: []
+            },
+            {
+                id: 16,
+                title: "16. 少しも〜ない",
+                rumus: "",
+                penjelasan: "Menekankan bahwa sesuatu tidak terjadi sedikit pun, bahkan dalam jumlah atau tingkat yang paling kecil.",
+                tips: "Selalu dipasangkan dengan bentuk negatif (〜ない・〜ません).\nArtinya sama dengan ちっとも〜ない, hanya saja 少しも lebih formal.",
+                examples: [
+                    { jp: `${r("彼","かれ")}の${r("態度","たいど")}は${r("少","すこ")}しも${r("変","か")}わっていない。`, id: "Sikapnya tidak berubah sedikit pun." },
+                    { jp: `この${r("問題","もんだい")}は${r("少","すこ")}しも${r("難","むずか")}しくない。`, id: "Masalah ini tidak sulit sedikit pun." }
+                ],
+                jlpt: [
+                    { jp: `${r("昨日","きのう")}の${r("夜","よる")}は${r("風","かぜ")}の${r("音","おと")}が${r("気","き")}になって、${r("少","すこ")}しも${r("眠","ねむ")}れなかった。`, id: "Tadi malam aku terganggu suara angin, jadi tidak bisa tidur sedikit pun.", tag: "JLPT N3" },
+                    { jp: `${r("最近","さいきん")}${r("毎日","まいにち")}${r("料理","りょうり")}をしているんだけど、${r("少","すこ")}しもうまくならないんだよ。`, id: "Akhir-akhir ini aku masak tiap hari, tapi nggak ada kemajuan sedikit pun.", tag: "JLPT N3 · Des 2021 · choukai" }
+                ]
+            },
+            {
+                id: 17,
+                title: "17. そんなに〜ない",
+                rumus: "",
+                penjelasan: "Menyatakan bahwa tingkat sesuatu tidak setinggi yang dibayangkan — ada, tapi tidak se〜 itu.",
+                tips: "Selalu dipasangkan dengan bentuk negatif (〜ない・〜ません).\n\nBentuk lain yang artinya mirip (belum pernah muncul di soal JLPT):\nそう〜ない - tidak se〜 itu\nその映画はそう悪くなかったよ。→ Film itu tidak seburuk itu, kok.\n\nたいして〜ない - tidak terlalu\nその仕事はたいして難しくない。→ Pekerjaan itu tidak terlalu sulit.",
+                examples: [
+                    { jp: `${r("今日","きょう")}はそんなに${r("寒","さむ")}くないね。`, id: "Hari ini tidak begitu dingin ya." },
+                    { jp: `${r("彼","かれ")}はそんなに${r("怒","おこ")}っていないと${r("思","おも")}う。`, id: "Aku rasa dia tidak begitu marah." }
+                ],
+                jlpt: [
+                    { jp: `${r("今","いま")}はまだそんなに${r("知","し")}られていないけど、いつかきっと、${r("日本","にほん")}を${r("代表","だいひょう")}する${r("画家","がか")}になると${r("思","おも")}いますよ。`, id: "Sekarang dia memang belum begitu terkenal, tapi suatu hari nanti aku yakin dia akan jadi pelukis yang mewakili Jepang.", tag: "JLPT N3 · Des 2023 · choukai" },
+                    { jp: `${r("今日","きょう")}はそんなに${r("暑","あつ")}くならなかったことも${r("影響","えいきょう")}してるんじゃない？`, id: "Hari ini kan nggak begitu panas, mungkin itu juga ngaruh, kan?", tag: "JLPT N3 · Des 2025 · choukai" }
+                ]
+            },
+            {
+                id: 18,
+                title: "18. 決して〜ない",
+                rumus: "",
+                penjelasan: "Memberi penekanan yang sangat kuat pada kalimat negatif — tidak akan pernah, tidak boleh sama sekali, atau sama sekali bukan.",
+                tips: "Selalu dipasangkan dengan bentuk negatif (〜ない・〜ません・〜ではない) atau larangan (〜てはいけない・〜ないでください).\nHati-hati jangan sampai tertukar dengan 絶対（ぜったい）, yang bisa dipakai di kalimat positif maupun negatif (絶対行く → pasti pergi), sedangkan 決して hanya untuk kalimat negatif.",
+                examples: [
+                    { jp: `${r("私","わたし")}は${r("決","けっ")}してあなたを${r("裏切","うらぎ")}りません。`, id: "Saya tidak akan pernah mengkhianatimu." },
+                    { jp: `${r("決","けっ")}してあきらめてはいけない。`, id: "Kamu tidak boleh menyerah, apa pun yang terjadi." }
+                ],
+                jlpt: [
+                    { jp: `${r("小川","おがわ")}さんは${r("正直","しょうじき")}な${r("人","ひと")}で、${r("決","けっ")}してうそは${r("言","い")}いません。`, id: "Ogawa-san itu orang yang jujur, dia tidak akan pernah berbohong.", tag: "JLPT N3" },
+                    { jp: `（${r("銀行","ぎんこう")}のホームページで）キャッシュカードの${r("暗証番号","あんしょうばんごう")}は${r("決","けっ")}して${r("他人","たにん")}に${r("知","し")}られないようにしてください。`, id: "(Di situs web bank) Jangan sampai nomor PIN kartu ATM Anda diketahui orang lain.", tag: "JLPT N3" }
+                ]
+            },
+            {
+                id: 19,
+                title: "19. もしかしたら / もしかすると",
+                rumus: "",
+                penjelasan: "Menyatakan kemungkinan atau dugaan yang tidak pasti.",
+                tips: "Kata keterangan ini sering dipasangkan dengan:\n〜かもしれない\n〜のではないか\n〜のではないだろうか",
+                examples: [
+                    { jp: `もしかしたら${r("今晩","こんばん")}は${r("雪","ゆき")}になるかもしれない。`, id: "Mungkin saja malam ini akan turun salju." },
+                    { jp: `もしかしたら${r("彼","かれ")}はもう${r("家","いえ")}に${r("帰","かえ")}ったかもしれない。`, id: "Mungkin saja dia sudah pulang ke rumah." }
+                ],
+                jlpt: [
+                    { jp: `あのう、${r("文学","ぶんがく")}の${r("本","ほん")}なら、もしかしたら${r("文学部資料室","ぶんがくぶしりょうしつ")}にあるかもしれません。`, id: "Anu, kalau buku sastra, mungkin saja ada di ruang koleksi Fakultas Sastra.", tag: "JLPT N3 · Des 2022 · choukai" },
+                    { jp: `あっ、もしかすると、${r("北口","きたぐち")}の${r("改札","かいさつ")}にいたんじゃない。`, id: "Ah, bisa jadi kamu nunggunya di gerbang tiket pintu utara, ya?", tag: "JLPT N3 · Des 2021 · choukai" }
+                ]
+            },
+            {
+                id: 20,
+                title: "20. 〜向け（〜むけ）",
+                rumus: "Kata Benda",
+                penjelasan: "Menunjukkan bahwa sesuatu ditujukan atau dibuat khusus untuk kelompok atau orang tertentu.",
+                tips: "Sering muncul dalam konteks produk, layanan, acara, atau informasi.",
+                examples: [
+                    { jp: `これは${r("初心者","しょしんしゃ")}${r("向","む")}けのマニュアルです。`, id: "Ini adalah panduan yang ditujukan untuk pemula." },
+                    { jp: `${r("子供","こども")}${r("向","む")}けに${r("作","つく")}られた${r("映画","えいが")}なので、${r("内容","ないよう")}がやさしい。`, id: "Karena film ini dibuat untuk anak-anak, isinya mudah dipahami." },
+                    { jp: `${r("外国人","がいこくじん")}${r("向","む")}けのパンフレットを${r("準備","じゅんび")}しました。`, id: "Kami telah menyiapkan pamflet yang diperuntukkan untuk orang asing." }
+                ],
+                jlpt: [
+                    { jp: `すみません、${r("掲示板","けいじばん")}で${r("中級者","ちゅうきゅうしゃ")}${r("向","む")}けの${r("卓球教室","たっきゅうきょうしつ")}があるって${r("見","み")}まして。`, id: "Permisi, saya lihat di papan pengumuman katanya ada kelas tenis meja untuk tingkat menengah.", tag: "JLPT N3 · Des 2021 · choukai" }
+                ]
+            },
+            {
+                id: 21,
+                title: "21. 〜ということ",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ＋だ atau tanpa だ\nKata Benda - ＋だ atau tanpa だ",
+                penjelasan: "Mengubah kalimat di depannya menjadi kata benda, sehingga isi kalimat itu bisa dibahas sebagai satu hal atau informasi.",
+                tips: "Biasanya diikuti partikel : 〜ということが、〜ということを、〜ということに.\nSering dipasangkan dengan kata kerja seperti : わかる、知る、気づく、聞く、忘れる.\nDi soal dokkai sering muncul 〜ということがわかった (jadi tahu bahwa...).\nMirip dengan こと・の (Bunpou Dasar), hanya saja 〜ということ dipakai untuk isi yang berupa informasi, fakta, atau pendapat.\n\nHati-hati jangan sampai tertukar:\n〜ということだ - katanya\n〜ということは - kalau A berarti B",
+                examples: [
+                    { jp: `${r("明日","あした")}の${r("授業","じゅぎょう")}が${r("休","やす")}みになったということを${r("友達","ともだち")}から${r("聞","き")}いた。`, id: "Aku dengar dari teman bahwa kelas besok diliburkan." },
+                    { jp: `${r("大切","たいせつ")}なのは${r("毎日","まいにち")}${r("続","つづ")}けるということです。`, id: "Yang penting adalah terus melakukannya setiap hari." }
+                ],
+                jlpt: [
+                    { jp: `${r("小学校","しょうがっこう")}で${r("最初","さいしょ")}に${r("思","おも")}ったのは、${r("子供","こども")}がたくさんいるのにごみが${r("落","お")}ちていないということでした。`, id: "Yang pertama kali terpikir olehku di SD itu adalah bahwa meskipun anaknya banyak sekali, tidak ada sampah yang berserakan.", tag: "JLPT N3" },
+                    { jp: `がっかりして、${r("友達","ともだち")}に${r("電話","でんわ")}をして${r("聞","き")}いてみると、ホウレンソウは${r("夜","よる")}になったら、${r("光","ひかり")}が${r("当","あ")}たってはいけないということがわかりました。`, id: "Karena kecewa, aku menelepon temanku dan bertanya. Ternyata aku jadi tahu bahwa bayam tidak boleh terkena cahaya kalau sudah malam.", tag: "JLPT N3 · Jul 2024" }
+                ]
+            },
+            {
+                id: 22,
+                title: "22. せっかく〜のに",
+                rumus: "",
+                penjelasan: "Menyatakan sesuatu yang sudah dilakukan dengan susah payah tapi hasilnya tidak sesuai harapan, atau kesempatan yang sayang dilewatkan.",
+                tips: "〜のに：sudah dilakukan dengan susah payah, tapi hasilnya tidak sesuai harapan\n〜のだから：kesempatan yang sayang kalau dilewatkan",
+                examples: [
+                    { jp: `せっかく${r("宿題","しゅくだい")}をやったのに、${r("家","いえ")}に${r("忘","わす")}れてきた。`, id: "Padahal sudah susah payah mengerjakan PR, tapi ketinggalan di rumah." },
+                    { jp: `せっかく${r("早","はや")}く${r("来","き")}たのに、${r("誰","だれ")}もいなかった。`, id: "Padahal sudah susah payah datang lebih awal, tapi tidak ada siapa-siapa." }
+                ],
+                jlpt: [
+                    { jp: `${r("今朝","けさ")}せっかく${r("早起","はやお")}きをしてお${r("弁当","べんとう")}を${r("作","つく")}ったのに、${r("持","も")}ってくるのを${r("忘","わす")}れてしまった。`, id: "Padahal tadi pagi aku sudah susah payah bangun pagi dan bikin bekal, tapi malah lupa membawanya.", tag: "JLPT N3" },
+                    { jp: `${r("昨日","きのう")}はせっかく${r("映画","えいが")}に${r("誘","さそ")}ってくれたのに、${r("行","い")}けなくて${r("悪","わる")}かったな。`, id: "Padahal kemarin kamu sudah repot-repot mengajakku nonton film, maaf ya aku nggak bisa pergi.", tag: "JLPT N3 · Des 2021 · choukai" }
+                ]
+            },
+            {
+                id: 23,
+                title: "23. 〜としても",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ✅\nKata Benda - ✅",
+                penjelasan: "Menyatakan bahwa meskipun suatu hal pada kalimat A benar-benar terjadi, kalimat B tetap berlaku — bisa berupa tindakan pembicara, penilaian, atau keharusan.",
+                tips: "Kalimat A pada としても berupa pengandaian.",
+                examples: [
+                    { jp: `${r("私","わたし")}はお${r("金持","かねも")}ちになったとしても、${r("今","いま")}と${r("変","か")}わらない${r("生活","せいかつ")}をするでしょう。`, id: "Kalaupun saya menjadi orang kaya, saya akan tetap hidup seperti sekarang." },
+                    { jp: `${r("今回","こんかい")}の${r("試験","しけん")}で${r("不合格","ふごうかく")}になったとしても、あきらめずに${r("次回","じかい")}も${r("受験","じゅけん")}するつもりです。`, id: "Kalaupun misalnya gagal di ujian kali ini, saya tidak akan menyerah dan akan ikut lagi ujian berikutnya." },
+                    { jp: `${r("失敗","しっぱい")}したとしても、やらないよりはましだ。`, id: "Meskipun gagal, lebih mending daripada tidak mencoba sama sekali." }
+                ],
+                jlpt: [
+                    { jp: `${r("今度","こんど")}の${r("出張","しゅっちょう")}で${r("泊","と")}まるYホテルは${r("駅前","えきまえ")}にあるので、${r("夜遅","よるおそ")}く${r("駅","えき")}に${r("着","つ")}いたとしても${r("安心","あんしん")}だ。`, id: "Hotel Y tempatku menginap saat dinas nanti ada di depan stasiun, jadi kalaupun sampai di stasiun larut malam, tetap aman.", tag: "JLPT N3" }
+                ]
+            },
+            {
+                id: 24,
+                title: "24. 〜にしても / 〜にしろ / 〜にせよ",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ✅\nKata Benda - ✅",
+                penjelasan: "Menyatakan bahwa meskipun suatu hal pada kalimat A benar-benar terjadi, kalimat B tetap berlaku — bisa berupa tindakan pembicara, penilaian, atau keharusan; kalau dipakai berpasangan untuk dua hal A dan B, artinya baik A maupun B, hasilnya tetap sama.",
+                tips: "Kalimat A pada にしても、にしろ、dan にせよ bisa berupa pengandaian maupun kenyataan.\nBentuk berpasangan: AにしろBにしろ・AにせよBにせよ・AにしてもBにしても.",
+                examples: [
+                    { jp: `${r("留学","りゅうがく")}するにせよ、${r("働","はたら")}くにせよ、しっかり${r("準備","じゅんび")}が${r("必要","ひつよう")}だ。`, id: "Mau kamu studi ke luar negeri atau bekerja, kamu tetap harus bersiap dengan baik." },
+                    { jp: `${r("行","い")}くにしろ${r("行","い")}かないにしろ、${r("早","はや")}く${r("決","き")}めてください。`, id: "Entah kamu pergi atau tidak, tolong segera putuskan." },
+                    { jp: `${r("遅","おく")}れるにしろ、${r("連絡","れんらく")}ぐらいしてほしい。`, id: "Meskipun terlambat, minimal beri kabar dong." },
+                    { jp: `${r("子供","こども")}にしろ${r("大人","おとな")}にしろ、このルールは${r("守","まも")}らなければならない。`, id: "Baik anak-anak maupun orang dewasa, aturan ini tetap harus dipatuhi." }
+                ],
+                jlpt: []
+            },
+            {
+                id: 25,
+                title: "25. いくら〜ても",
+                rumus: "",
+                penjelasan: "Menekankan bahwa seberapa banyak pun A dilakukan, atau seberapa tinggi pun tingkatnya, hasil B tetap tidak berubah.",
+                tips: "",
+                examples: [],
+                jlpt: [
+                    { jp: `このお${r("菓子","かし")}、${r("甘","あま")}くないから、いくら${r("食","た")}べても${r("飽","あ")}きないね。`, id: "Kue ini nggak manis, jadi seberapa pun dimakan nggak bikin bosan, ya.", tag: "JLPT N3 · Des 2019 · choukai" }
+                ]
+            },
+            {
+                id: 26,
+                title: "26. それでも",
+                rumus: "",
+                penjelasan: "Menyatakan bahwa sesuatu tetap terjadi atau tetap dilakukan walaupun ada kondisi yang berlawanan.",
+                tips: "Kata sambung versi dari bunpou 〜ても.\n\nPerbedaan それでも dan それなのに:\nそれでも - hasilnya tetap terjadi walaupun ada hambatan\nそれなのに - kenyataan bertentangan dengan harapan, ada rasa kecewa atau tidak terima",
+                examples: [
+                    { jp: `その${r("日","ひ")}は${r("朝","あさ")}からずっと${r("雨","あめ")}だった。それでも、コンサートには${r("大勢","おおぜい")}の${r("人","ひと")}が${r("集","あつ")}まった。`, id: "Hari itu hujan terus dari pagi. Meskipun begitu, banyak sekali orang yang datang ke konser." }
+                ],
+                jlpt: [
+                    { jp: `${r("息子","むすこ")}は、サッカークラブの${r("練習","れんしゅう")}がきついとよく${r("言","い")}っているが、それでもやめずに${r("続","つづ")}けているのはやっぱりサッカーが${r("好","す")}きだからだと${r("思","おも")}う。`, id: "Anakku sering bilang latihan di klub sepak bolanya berat. Tapi meskipun begitu, dia terus ikut tanpa berhenti, dan menurutku itu karena dia memang suka sepak bola.", tag: "JLPT N3" },
+                    { jp: `${r("会","あ")}えなかったのは${r("残念","ざんねん")}だったが、それでも${r("私","わたし")}は${r("満足","まんぞく")}している。`, id: "Sayang sekali aku tidak bisa bertemu dengannya, tapi meskipun begitu, aku merasa puas.", tag: "JLPT N3 · Des 2023" }
+                ]
+            },
+            {
+                id: 27,
+                title: "27. 〜まで / 〜までして / 〜てまで",
+                rumus: "Kata Benda + まで ／ までして\nKata Benda + に + まで\nKata Kerja - Vてまで",
+                penjelasan: "Menunjukkan bahwa sesuatu yang biasanya tidak termasuk pun ikut masuk dalam lingkup pembicaraan.",
+                tips: "Bentuk ini memberi nuansa \"sampai sejauh ini pun... terjadi\", dan sering menyiratkan keterkejutan, keterlaluan, atau luasnya dampak suatu hal.",
+                examples: [
+                    { jp: `${r("借金","しゃっきん")}までして${r("高","たか")}い${r("車","くるま")}を${r("買","か")}わなくてもいい。`, id: "Tak perlu membeli mobil mahal sampai harus berhutang. (tidak perlu sampai sejauh itu)" },
+                    { jp: `${r("一番","いちばん")}${r("賛成","さんせい")}してくれると${r("思","おも")}っていた${r("母","はは")}まで${r("私","わたし")}の${r("結婚","けっこん")}に${r("反対","はんたい")}した。`, id: "Bahkan ibu yang paling saya kira akan setuju pun menentang pernikahan saya." },
+                    { jp: `${r("遊園地","ゆうえんち")}では、みんな${r("長","なが")}い${r("時間","じかん")}${r("並","なら")}んでまでジェットコースターに${r("乗","の")}りたがる。`, id: "Di taman hiburan, semua orang bahkan rela antre lama demi bisa naik roller coaster." }
+                ],
+                jlpt: []
+            },
+            {
+                id: 28,
+                title: "28. 〜うちに（selagi masih）",
+                rumus: "Kata Kerja - VKamus, Vない, Vている\nKata Sifat i - ✅\nKata Sifat na - ＋な\nKata Benda - ＋の",
+                penjelasan: "Menyatakan bahwa selagi masih (A), (B) dilakukan sebelum keadaan (A) berubah — oleh pembicara sendiri, bersama-sama, atau sebagai ajakan kepada lawan bicara.",
+                tips: "Bentuk 〜ないうちに artinya \"sebelum (keadaan) berubah\", jadi lakukan sesuatu sebelum terlambat.",
+                examples: [
+                    { jp: `${r("暗","くら")}くならないうちに${r("山","やま")}を${r("下","お")}りたい。`, id: "Aku ingin turun dari gunung selagi masih belum gelap." },
+                    { jp: `${r("明","あか")}るいうちに${r("庭","にわ")}を${r("掃除","そうじ")}してしまおう。`, id: "Selagi masih terang, ayo kita selesaikan membersihkan halaman." }
+                ],
+                jlpt: [
+                    { jp: `${r("大雨","おおあめ")}が${r("降","ふ")}らないうちに${r("急","いそ")}いで${r("帰","かえ")}りましょう。`, id: "Ayo cepat pulang selagi hujan deras belum turun.", tag: "JLPT N3" },
+                    { jp: `${r("冷","さ")}めないうちにどうぞ。`, id: "Silakan dimakan selagi masih hangat.", tag: "JLPT N3 · Des 2022 · choukai" }
+                ]
+            },
+            {
+                id: 29,
+                title: "29. 〜うちに（selama berlangsung）",
+                rumus: "Kata Kerja - VKamus, Vない, Vている\nKata Sifat i - ✅\nKata Sifat na - ＋な\nKata Benda - ＋の",
+                penjelasan: "Menyatakan bahwa selama (A) sedang berlangsung, tanpa disadari terjadi suatu perubahan atau hal (B).",
+                tips: "Biasanya (A) berbentuk Vている, dan (B) berupa hal yang tidak direncanakan, seperti 〜なった, 〜てしまった, 〜ようになった.",
+                examples: [
+                    { jp: `${r("切符","きっぷ")}を${r("買","か")}っているうちに${r("電車","でんしゃ")}が${r("出","で")}てしまった。`, id: "Pada saat saya sedang membeli tiket, keretanya berangkat (telat naik)." },
+                    { jp: `${r("音楽","おんがく")}を${r("聞","き")}いているうちに、${r("眠","ねむ")}ってしまった。`, id: "Saat sedang mendengarkan musik, aku (tidak sengaja) tertidur." }
+                ],
+                jlpt: [
+                    { jp: `${r("歩","ある")}いているうちに${r("方角","ほうがく")}がわからなくなった。`, id: "Saat sedang berjalan, aku jadi nggak tahu arah.", tag: "JLPT N3" },
+                    { jp: `${r("勉強","べんきょう")}になることばかりだし、${r("楽","たの")}しんでやってるうちに、${r("三年","さんねん")}たっちゃった。`, id: "Semuanya bikin aku banyak belajar, dan saat sedang asyik menikmatinya, tidak terasa sudah tiga tahun berlalu.", tag: "JLPT N3 · Des 2023 · choukai" }
+                ]
+            },
+            {
+                id: 30,
+                title: "30. 〜ことにしている",
+                rumus: "Kata Kerja - VKamus\nKata Kerja - Vない",
+                penjelasan: "Menyatakan kebiasaan atau keputusan pribadi yang sengaja dilakukan secara terus-menerus.",
+                tips: "",
+                examples: [
+                    { jp: `${r("夜","よる")}は８${r("時以降","じいこう")}、スマホを${r("見","み")}ないことにしている。`, id: "Saya membiasakan diri untuk tidak melihat ponsel setelah jam 8 malam." },
+                    { jp: `${r("健康","けんこう")}のために、${r("毎朝","まいあさ")}ジョギングすることにしている。`, id: "Demi kesehatan, saya joging setiap pagi." },
+                    { jp: `${r("毎日","まいにち")}２${r("時間","じかん")}${r("日本語","にほんご")}を${r("勉強","べんきょう")}することにしている。`, id: "Saya memiliki kebiasaan yaitu belajar bahasa Jepang selama dua jam setiap hari." }
+                ],
+                jlpt: [
+                    { jp: `${r("私","わたし")}は${r("毎年誕生日","まいとしたんじょうび")}にその${r("時","とき")}${r("読","よ")}みたいと${r("思","おも")}った${r("本","ほん")}を${r("一冊","いっさつ")}${r("買","か")}うことにしている。`, id: "Setiap ulang tahun, aku membiasakan diri membeli satu buku yang ingin kubaca saat itu.", tag: "JLPT N3" },
+                    { jp: `${r("読書","どくしょ")}が${r("趣味","しゅみ")}の${r("友人","ゆうじん")}は、いつどんな${r("本","ほん")}を${r("読","よ")}んだかを${r("忘","わす")}れないように${r("必","かなら")}ずノートに${r("記録","きろく")}することにしているそうだ。`, id: "Katanya temanku yang hobinya membaca punya kebiasaan selalu mencatat di buku catatan supaya nggak lupa kapan dia membaca buku apa.", tag: "JLPT N3" }
+                ]
+            },
+            {
+                id: 31,
+                title: "31. 〜ような気がする",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ＋な\nKata Benda - ＋の\n＊ ような boleh dihilangkan, kecuali untuk Kata Benda",
+                penjelasan: "Menyatakan kesan atau perasaan pembicara yang belum pasti, berdasarkan apa yang ia rasakan sendiri.",
+                tips: "気 pada bunpou ini artinya \"perasaan\", jadi secara harfiah artinya \"ada perasaan seperti...\".\nIni lanjutan dari bunpou がします (Bunpou Dasar) yang memakai kotoba 気.\nNuansanya lebih tidak yakin daripada 〜と思う, jadi sering dipakai untuk menyampaikan pendapat secara halus.\nBentuk tanpa ような juga sering muncul : 寒い気がする、変な気がした.\n\nBedanya dengan がします:\n音・声・味・におい ＋がします - dirasakan lewat panca indra\n〜ような気がする - dirasakan di dalam hati, berupa kesan atau firasat",
+                examples: [
+                    { jp: `この${r("道","みち")}は${r("前","まえ")}にも${r("通","とお")}ったような${r("気","き")}がする。`, id: "Rasanya aku pernah lewat jalan ini sebelumnya." },
+                    { jp: `${r("日本","にほん")}に${r("来","き")}てから${r("少","すこ")}しやせたような${r("気","き")}がします。`, id: "Sejak datang ke Jepang, rasanya aku jadi sedikit kurus." }
+                ],
+                jlpt: [
+                    { jp: `${r("家","いえ")}の${r("中","なか")}が${r("明","あか")}るくなったような${r("気","き")}がしました。`, id: "Rasanya bagian dalam rumah jadi lebih terang.", tag: "JLPT N3" },
+                    { jp: `${r("以前","いぜん")}より${r("家族","かぞく")}の${r("会話","かいわ")}も${r("増","ふ")}えたような${r("気","き")}がしますよ。`, id: "Rasanya obrolan di keluarga juga jadi lebih banyak dibanding dulu.", tag: "JLPT N3 · Des 2018 · choukai" }
+                ]
+            },
+            {
+                id: 32,
+                title: "32. 〜ことになっている",
+                rumus: "Kata Kerja - VKamus\nKata Kerja - Vない\nKata Benda ＋になっている (tanpa こと)",
+                penjelasan: "Menyatakan aturan, keputusan, atau kebiasaan yang telah ditentukan sebelumnya dan sedang berlaku sekarang.",
+                tips: "Biasanya bukan keputusan pribadi, tapi berdasarkan aturan umum, kesepakatan, atau sistem sosial.\n※ Bunpou ini juga bisa berarti bentuk ている dari ことになる, jadi bisa digunakan untuk \"keputusan yang telah dibuat\".",
+                examples: [
+                    { jp: `この${r("学校","がっこう")}では${r("日本語","にほんご")}だけを${r("話","はな")}すことになっている。`, id: "Di sekolah ini, ditentukan bahwa hanya boleh berbicara dalam bahasa Jepang." },
+                    { jp: `ごみは${r("分別","ぶんべつ")}して${r("出","だ")}すことになっています。`, id: "Ada aturan untuk membuang sampah dengan dipisahkan." }
+                ],
+                jlpt: [
+                    { jp: `この${r("授業","じゅぎょう")}では、${r("学生","がくせい")}は${r("毎週","まいしゅう")}の${r("授業","じゅぎょう")}の${r("前","まえ")}に、${r("先生","せんせい")}が${r("指定","してい")}した${r("漫画","まんが")}を${r("読","よ")}んでいくことになっていました。`, id: "Di kelas ini, ada aturan bahwa sebelum kelas tiap minggu, mahasiswa harus sudah membaca manga yang ditentukan dosen.", tag: "JLPT N3" },
+                    { jp: `${r("会議","かいぎ")}の${r("最後","さいご")}のほうでこの${r("間","あいだ")}の${r("出張","しゅっちょう")}の${r("報告","ほうこく")}をすることになっているんですが、それまでには${r("間","ま")}に${r("合","あ")}うと${r("思","おも")}います。`, id: "Sudah ditentukan bahwa saya akan melaporkan hasil dinas luar kemarin di bagian akhir rapat, tapi saya rasa sebelum itu saya sudah sempat datang.", tag: "JLPT N3 · Des 2018 · choukai" }
+                ]
+            },
+            {
+                id: 33,
+                title: "33. 〜に違いない",
+                rumus: "Bentuk Biasa (tanpa tambahan apapun)",
+                penjelasan: "Menyatakan bahwa pembicara merasa yakin atau percaya kuat terhadap sesuatu, berdasarkan pengamatan atau informasi yang ada.",
+                tips: "Tidak digunakan untuk menyatakan kewajiban atau keharusan, hanya untuk dugaan yang sangat kuat.\nBentuk lain yang artinya sama (belum pernah muncul di soal JLPT):\n〜に相違ない - lebih formal dibanding 〜に違いない\nKanji 相違 dibaca「そうい」",
+                examples: [
+                    { jp: `あんな${r("高価","こうか")}なものを${r("買","か")}うなんて、${r("彼","かれ")}はお${r("金持","かねも")}ちに${r("違","ちが")}いない。`, id: "Bisa membeli barang semahal itu, dia sudah pasti orang kaya." },
+                    { jp: `ライトがついているから、${r("誰","だれ")}か${r("家","いえ")}にいるに${r("違","ちが")}いない。`, id: "Karena lampunya menyala, sudah pasti ada orang di rumah." },
+                    { jp: `あの${r("笑顔","えがお")}を${r("見","み")}る${r("限","かぎ")}り、${r("彼","かれ")}はこの${r("結果","けっか")}に${r("満足","まんぞく")}しているに${r("違","ちが")}いない。`, id: "Dari senyumnya, tidak salah lagi dia puas dengan hasil ini." }
+                ],
+                jlpt: []
+            },
+            {
+                id: 34,
+                title: "34. 〜ということだ",
+                rumus: "Kalimat Bentuk Biasa ＋ということだ\nKata Benda dan Kata Sifat na ＋だ atau ＋だった",
+                penjelasan: "Menyampaikan informasi, penjelasan, atau kesimpulan yang berasal dari sumber lain.",
+                tips: "Sama dengan Bunpou 〜そうだ atau 〜らしい, hanya saja lebih formal.\nSering dipasangkan dengan Bunpou によると、によれば atau では.",
+                examples: [
+                    { jp: `${r("天気予報","てんきよほう")}によると、${r("明日","あした")}は${r("雪","ゆき")}が${r("降","ふ")}るということです。`, id: "Menurut ramalan cuaca, katanya besok akan turun salju." },
+                    { jp: `${r("彼","かれ")}は${r("来週","らいしゅう")}から${r("海外","かいがい")}で${r("働","はたら")}くということだ。`, id: "Katanya dia akan bekerja di luar negeri mulai minggu depan." },
+                    { jp: `${r("店","みせ")}の${r("人","ひと")}の${r("話","はなし")}では、この${r("地方","ちほう")}の${r("米","こめ")}はとてもおいしいということだ。`, id: "Menurut cerita orang toko, beras dari daerah ini katanya sangat enak." },
+                    { jp: `${r("市","し")}の${r("知","し")}らせによれば、この${r("道路","どうろ")}は${r("来週","らいしゅう")}から${r("工事","こうじ")}が${r("始","はじ")}まるということです。`, id: "Menurut pengumuman dari pemerintah kota, katanya jalan ini akan mulai diperbaiki mulai minggu depan." }
+                ],
+                jlpt: [
+                    { jp: `その${r("他","た")}の${r("製品","せいひん")}についての${r("説明","せつめい")}を、ということでしたので、パンフレットと${r("説明書","せつめいしょ")}、${r("価格表","かかくひょう")}をお${r("送","おく")}りいたします。`, id: "Karena Bapak menyampaikan ingin dijelaskan juga tentang produk-produk lainnya, bersama ini kami kirimkan pamflet, buku petunjuk, dan daftar harga.", tag: "JLPT N3 · Des 2021" }
+                ]
+            },
+            {
+                id: 35,
+                title: "35. 〜と言われている",
+                rumus: "Kalimat Bentuk Biasa ＋と言われている\nKata Benda dan Kata Sifat na ＋だ atau ＋だった",
+                penjelasan: "Menyampaikan pendapat umum atau kepercayaan yang sudah tersebar luas di masyarakat, bukan dari satu orang tertentu.",
+                tips: "Lebih sering digunakan untuk mitos, atau informasi-informasi yang sumbernya tidak jelas.",
+                examples: [
+                    { jp: `この${r("地方","ちほう")}の${r("温泉","おんせん")}は${r("肌","はだ")}にいいと${r("言","い")}われている。`, id: "Katanya onsen di daerah ini baik untuk kulit." },
+                    { jp: `あの${r("山","やま")}には${r("幽霊","ゆうれい")}が${r("出","で")}ると${r("言","い")}われている。`, id: "Konon katanya, ada hantu di gunung itu." },
+                    { jp: `${r("納豆","なっとう")}は${r("体","からだ")}にいいと${r("言","い")}われている。`, id: "Natto katanya baik untuk kesehatan tubuh." }
+                ],
+                jlpt: [
+                    { jp: `しかし${r("最近","さいきん")}、${r("昼寝","ひるね")}の${r("前","まえ")}にはコーヒーを${r("飲","の")}むといいと${r("言","い")}われるようになってきた。`, id: "Tapi belakangan ini mulai banyak dikatakan bahwa minum kopi sebelum tidur siang itu bagus.", tag: "JLPT N3" }
+                ]
+            },
+            {
+                id: 36,
+                title: "36. 〜はずがない",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ＋な\nKata Benda - ＋の",
+                penjelasan: "Menyatakan keyakinan kuat bahwa sesuatu tidak mungkin terjadi, atau tidak masuk akal.",
+                tips: "Sering dipasangkan dengan bunpou 〜のだから.\n※ Perbedaan はず dan わけ\nはず - alasannya biasanya dilandasi logika\nわけ - alasannya biasanya dilandasi logika + perasaan atau emosi\nTapi lebih baik dianggap sama, karena semuanya tergantung pembicara mau pakai yang mana.\nBisa disingkat jadi はずない atau わけない.",
+                examples: [
+                    { jp: `${r("彼","かれ")}がそんなことを${r("言","い")}うはずがない。`, id: "Nggak mungkin dia bilang begitu." },
+                    { jp: `この${r("問題","もんだい")}は${r("簡単","かんたん")}だから、${r("間違","まちが")}えるはずがない。`, id: "Soal ini mudah, jadi nggak mungkin salah." }
+                ],
+                jlpt: [
+                    { jp: `${r("林","はやし")}さんは、${r("会議","かいぎ")}で${r("資料","しりょう")}のグラフについて${r("質問","しつもん")}されたときに、わからないと${r("言","い")}っていたが、${r("林","はやし")}さんが${r("作","つく")}ったグラフなのだから、わからないはずがないと${r("思","おも")}う。`, id: "Hayashi-san bilang tidak mengerti waktu ditanya soal grafik di bahan rapat, tapi karena grafik itu dia sendiri yang buat, menurutku tidak mungkin dia tidak mengerti.", tag: "JLPT N3 · Des 2025" },
+                    { jp: `あれ、${r("小林","こばやし")}さんが${r("会議","かいぎ")}に${r("遅","おく")}れてくるはずないんだけどね。`, id: "Lho, Kobayashi-san itu nggak mungkin telat datang ke rapat, sih.", tag: "JLPT N3 · Jul 2018 · choukai" }
+                ]
+            },
+            {
+                id: 37,
+                title: "37. 〜ように",
+                rumus: "Kata Kerja - VKamus\nKata Kerja - Vた\nKata Kerja - Vている\nAda beberapa pengecualian seperti ご存知のように",
+                penjelasan: "Menyampaikan sesuatu dengan merujuk pada hal yang sudah disampaikan sebelumnya, yang diketahui lawan bicara, atau dari sumber lain (buku, berita, dll.).",
+                tips: "Fungsi ini mirip dengan bunpou 通りに（とおりに）.",
+                examples: [
+                    { jp: `${r("前","まえ")}にも${r("話","はな")}したように、${r("来週","らいしゅう")}は${r("私","わたし")}は${r("日本","にほん")}にいません。`, id: "Seperti yang sudah saya bicarakan sebelumnya, saya tidak akan berada di Jepang minggu depan." },
+                    { jp: `${r("今朝","けさ")}の${r("新聞","しんぶん")}に${r("書","か")}いてあったように、${r("今年","ことし")}は${r("米","こめ")}のできがいいらしい。`, id: "Seperti yang tertulis di koran pagi ini, hasil panen padi tahun ini kabarnya bagus." },
+                    { jp: `ご${r("存知","ぞんじ")}のように、${r("日本","にほん")}は${r("台風","たいふう")}が${r("多","おお")}い${r("国","くに")}です。`, id: "Seperti yang Anda ketahui, Jepang adalah negara yang banyak mengalami topan." },
+                    { jp: `${r("先生","せんせい")}がおっしゃったように、もっと${r("練習","れんしゅう")}しなければならない。`, id: "Seperti yang dikatakan oleh sensei, kita harus lebih banyak berlatih." }
+                ],
+                jlpt: [
+                    { jp: `${r("皆","みな")}さんもご${r("存知","ぞんじ")}のように、${r("中村","なかむら")}さんが${r("来月","らいげつ")}にお${r("辞","や")}めになります。`, id: "Seperti yang teman-teman semua sudah tahu, Nakamura-san akan berhenti kerja bulan depan.", tag: "JLPT N3" }
+                ]
+            },
+            {
+                id: 38,
+                title: "38. まるで〜ようだ",
+                rumus: "",
+                penjelasan: "Menunjukkan kemiripan antara dua hal — bagaikan atau seakan-akan.",
+                tips: "Bentuk lain yang artinya mirip (belum pernah muncul di soal JLPT):\nちょうど〜みたいだ - persis seperti",
+                examples: [
+                    { jp: `まるで${r("夢","ゆめ")}のようだ。`, id: "Seperti mimpi saja." },
+                    { jp: `${r("彼","かれ")}の${r("話","はなし")}はまるで${r("映画","えいが")}のようだった。`, id: "Ceritanya seperti dalam film." }
+                ],
+                jlpt: [
+                    { jp: `${r("友達","ともだち")}がくれた${r("傘","かさ")}は${r("内側","うちがわ")}に${r("美","うつく")}しい${r("桜","さくら")}の${r("絵","え")}がかいてあったのです。${r("傘","かさ")}をさすと、まるで${r("桜","さくら")}の${r("木","き")}の${r("下","した")}にいるようでした。`, id: "Ternyata di bagian dalam payung pemberian teman saya ada gambar bunga sakura yang indah. Saat payung itu saya pakai, rasanya bagaikan berada di bawah pohon sakura.", tag: "JLPT N3 · Des 2021" },
+                    { jp: `${r("自動販売機","じどうはんばいき")}に${r("話","はな")}しかけられるなんて、まるでアニメの${r("世界","せかい")}にいるようだと${r("感","かん")}じました。`, id: "Diajak bicara oleh mesin penjual otomatis — rasanya bagaikan berada di dunia anime.", tag: "JLPT N3 · Jul 2010" }
+                ]
+            },
+            {
+                id: 39,
+                title: "39. 〜ようにしている",
+                rumus: "Kata Kerja - VKamus\nKata Kerja - Vない",
+                penjelasan: "Menyatakan usaha atau kebiasaan yang sedang dilakukan secara sadar dan berulang oleh pembicara.",
+                tips: "Perbedaan utama dengan bunpou ことにしている adalah:\npada bunpou ようにしている pembicara masih dalam tahap berusaha atau berjuang untuk menjadikan suatu hal menjadi sebuah kebiasaan.",
+                examples: [
+                    { jp: `${r("毎日","まいにち")}${r("運動","うんどう")}するようにしている。`, id: "Saya berusaha untuk berolahraga setiap hari." },
+                    { jp: `${r("寝","ね")}る${r("前","まえ")}にスマホを${r("見","み")}ないようにしている。`, id: "Saya berusaha untuk tidak melihat ponsel sebelum tidur." }
+                ],
+                jlpt: [
+                    { jp: `${r("他","た")}には${r("踊","おど")}っている${r("時","とき")}、${r("音楽","おんがく")}をしっかり${r("聴","き")}くようにしているっていう${r("人","ひと")}も${r("多","おお")}いよ。`, id: "Selain itu, banyak juga yang bilang mereka berusaha mendengarkan musiknya baik-baik waktu menari.", tag: "JLPT N3 · Jul 2024 · choukai" },
+                    { jp: `お${r("腹","なか")}が${r("空","あ")}いた${r("状態","じょうたい")}で、${r("私","わたし")}はスーパーに${r("買い物","かいもの")}${r("行","い")}かないようにしているんです。`, id: "Aku membiasakan diri untuk nggak belanja ke supermarket dalam keadaan perut lapar.", tag: "JLPT N3 · Des 2022 · choukai" }
+                ]
+            },
+            {
+                id: 40,
+                title: "40. 〜くらい〜はない / 〜ほど〜はない",
+                rumus: "Kata Benda + くらい + Kata Sifat... + はない\nKata Benda + ほど + Kata Sifat... + はない\n※ Kata Sifat pada rumus harus ada dalam bentuk Kata Benda, perhatikan contoh kalimatnya lagi",
+                penjelasan: "Menyatakan kalau sesuatu adalah yang nomor satu atau yang paling... (menurut perasaan atau penilaian pribadi).",
+                tips: "Bunpou ini jarang digunakan untuk menyatakan fakta, lebih ke penilaian subjektif terhadap sesuatu.",
+                examples: [
+                    { jp: `${r("彼","かれ")}くらい${r("真面目","まじめ")}な${r("学生","がくせい")}はいない。`, id: "Tidak ada siswa yang lebih serius daripada dia." },
+                    { jp: `ああ、${r("明日","あした")}も${r("漢字","かんじ")}のテストがある。テストほど${r("嫌","いや")}なものはない。`, id: "Aduh, besok juga ada tes kanji. Tidak ada yang lebih menyebalkan daripada tes." },
+                    { jp: `${r("失恋","しつれん")}ほどつらいことはない。`, id: "Tidak ada hal yang lebih menyakitkan daripada putus cinta." }
+                ],
+                jlpt: [
+                    { jp: `あの${r("先生","せんせい")}ほどわかりやすく${r("教","おし")}えてくれる${r("先生","せんせい")}はいないと${r("思","おも")}います。`, id: "Menurutku nggak ada guru yang ngajarnya lebih gampang dimengerti daripada guru itu.", tag: "JLPT N3" },
+                    { jp: `${r("林","はやし")}さんは${r("奥","おく")}さんの${r("作","つく")}るハンバーグほどおいしいものはないとよく${r("言","い")}っている。`, id: "Hayashi-san sering bilang nggak ada yang lebih enak daripada hamburger buatan istrinya.", tag: "JLPT N3" }
+                ]
+            },
+            {
+                id: 41,
+                title: "41. 〜一方で（kontras）",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ＋な\nKata Benda - ＋である",
+                penjelasan: "Menyatakan kontras atau perbandingan antara dua hal atau dua topik.",
+                tips: "",
+                examples: [
+                    { jp: `このアパートは${r("駅","えき")}に${r("近","ちか")}くて${r("便利","べんり")}な${r("一方","いっぽう")}で、${r("家賃","やちん")}が${r("高","たか")}い。`, id: "Apartemen ini dekat stasiun dan praktis, tapi di sisi lain harga sewanya mahal." },
+                    { jp: `${r("子供","こども")}が${r("生","う")}まれて${r("嬉","うれ")}しかった${r("一方","いっぽう")}で、${r("重","おも")}い${r("責任","せきにん")}も${r("感","かん")}じた。`, id: "Di satu sisi aku senang karena anakku lahir, tapi di sisi lain aku juga merasakan beban tanggung jawab yang berat." }
+                ],
+                jlpt: [
+                    { jp: `インターネットで${r("買い物","かいもの")}をするのは、${r("便利","べんり")}である${r("一方","いっぽう")}で、${r("売","う")}っている${r("人","ひと")}の${r("顔","かお")}が${r("見","み")}えないという${r("怖","こわ")}さもある。`, id: "Belanja lewat internet itu di satu sisi praktis, tapi di sisi lain ada rasa takutnya juga karena kita nggak bisa melihat wajah penjualnya.", tag: "JLPT N3" },
+                    { jp: `${r("最近","さいきん")}では${r("外国","がいこく")}の${r("方","かた")}が${r("泊","と")}まりやすいよう${r("部屋","へや")}を${r("洋式","ようしき")}にして、ベッドを${r("置","お")}くところがある${r("一方","いっぽう")}、こちらでは${r("去年","きょねん")}すべての${r("部屋","へや")}を${r("畳","たたみ")}にしました。`, id: "Akhir-akhir ini ada penginapan yang mengubah kamarnya jadi gaya Barat dan menaruh ranjang supaya tamu asing lebih nyaman menginap, tapi di sisi lain, penginapan ini tahun lalu malah mengubah semua kamarnya jadi kamar tatami.", tag: "JLPT N3 · Des 2018 · choukai" }
+                ]
+            },
+            {
+                id: 42,
+                title: "42. 〜一方で（bersamaan）",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ＋な\nKata Benda - ＋である",
+                penjelasan: "Menyatakan bahwa dua hal berlangsung secara bersamaan, tanpa bertentangan.",
+                tips: "",
+                examples: [
+                    { jp: `${r("彼","かれ")}は${r("会社員","かいしゃいん")}として${r("働","はたら")}く${r("一方","いっぽう")}で、${r("夜","よる")}は${r("大学","だいがく")}で${r("勉強","べんきょう")}している。`, id: "Dia bekerja sebagai pegawai kantoran, dan di sisi lain juga belajar di universitas pada malam hari." },
+                    { jp: `あの${r("歌手","かしゅ")}は${r("歌","うた")}う${r("一方","いっぽう")}で、ドラマにも${r("出演","しゅつえん")}している。`, id: "Penyanyi itu selain menyanyi, dia juga tampil di drama." },
+                    { jp: `${r("彼","かれ")}は${r("小説","しょうせつ")}を${r("書","か")}く${r("一方","いっぽう")}で、${r("翻訳","ほんやく")}の${r("仕事","しごと")}もしている。`, id: "Dia menulis novel, dan di sisi lain juga bekerja sebagai penerjemah." }
+                ],
+                jlpt: [
+                    { jp: `${r("夫","おっと")}は、プロのサッカー${r("選手","せんしゅ")}として${r("活動","かつどう")}する${r("一方","いっぽう")}で${r("大学院","だいがくいん")}でスポーツ${r("科学","かがく")}を${r("学","まな")}んでいる。`, id: "Suamiku selain aktif sebagai pemain sepak bola profesional, juga kuliah S2 ilmu olahraga.", tag: "JLPT N3" },
+                    { jp: `${r("職人","しょくにん")}が${r("年","とし")}を${r("取","と")}って${r("辞","や")}めていく${r("一方","いっぽう")}で、${r("職人","しょくにん")}になりたいと${r("考","かんが")}える${r("若","わか")}い${r("人","ひと")}が${r("見","み")}つからず、${r("職人","しょくにん")}の${r("数","かず")}が${r("減","へ")}っているのだ。`, id: "Di satu sisi para pengrajin makin tua lalu berhenti, di sisi lain anak muda yang ingin jadi pengrajin juga sulit dicari, sehingga jumlah pengrajin terus berkurang.", tag: "JLPT N3" }
+                ]
+            },
+            {
+                id: 43,
+                title: "43. 〜たらどう",
+                rumus: "Kata Kerja - たら ＋どう",
+                penjelasan: "Memberikan saran secara halus kepada lawan bicara.",
+                tips: "Sering dipakai dalam percakapan santai untuk menyarankan sesuatu.\nTergantung nada dan konteks, bisa terdengar sedikit menyindir.",
+                examples: [
+                    { jp: `${r("疲","つか")}れているみたいだね。${r("少","すこ")}し${r("休","やす")}んだらどう？`, id: "Kamu kayaknya capek. Gimana kalau istirahat sebentar?" },
+                    { jp: `この${r("問題","もんだい")}、${r("先生","せんせい")}に${r("聞","き")}いたらどうですか？`, id: "Bagaimana kalau kamu tanya ke guru soal ini?" }
+                ],
+                jlpt: [
+                    { jp: `${r("生活","せいかつ")}に${r("便利","べんり")}な${r("所","ところ")}より、${r("通勤","つうきん")}のしやすい${r("所","ところ")}にしたらどうか。`, id: "Daripada tempat yang praktis untuk hidup sehari-hari, bagaimana kalau pilih tempat yang gampang untuk pulang-pergi kerja?", tag: "JLPT N3 · Des 2024" }
+                ]
+            },
+            {
+                id: 44,
+                title: "44. 〜に比べて",
+                rumus: "Kata Benda",
+                penjelasan: "Membandingkan sesuatu dengan yang lain dari sisi yang sama.",
+                tips: "Kata Keterangan waktu seperti 昨日, 今年 atau 以前 juga bisa dipakai dengan bunpou ini.",
+                examples: [
+                    { jp: `${r("今年","ことし")}の${r("冬","ふゆ")}は${r("去年","きょねん")}に${r("比","くら")}べて${r("寒","さむ")}い。`, id: "Musim dingin tahun ini lebih dingin dibandingkan tahun lalu." },
+                    { jp: `${r("日本","にほん")}に${r("比","くら")}べて、インドネシアは${r("湿度","しつど")}が${r("高","たか")}い。`, id: "Dibandingkan dengan Jepang, Indonesia lebih lembap." },
+                    { jp: `${r("東京","とうきょう")}に${r("比","くら")}べて、この${r("町","まち")}は${r("家賃","やちん")}が${r("安","やす")}い。`, id: "Dibandingkan dengan Tokyo, biaya sewa rumah di kota ini lebih murah." }
+                ],
+                jlpt: [
+                    { jp: `${r("私","わたし")}の${r("大学","だいがく")}の${r("国際経済学部","こくさいけいざいがくぶ")}は、${r("他","た")}の${r("学部","がくぶ")}にくらべて${r("留学生","りゅうがくせい")}の${r("割合","わりあい")}が${r("高","たか")}い。`, id: "Di Fakultas Ekonomi Internasional kampusku, persentase mahasiswa asingnya lebih tinggi dibandingkan dengan fakultas lain.", tag: "JLPT N3" }
+                ]
+            },
+            {
+                id: 45,
+                title: "45. 〜たびに",
+                rumus: "Kata Kerja - VKamus\nKata Benda - ＋の",
+                penjelasan: "Menyatakan bahwa setiap kali A, selalu terjadi B.",
+                tips: "Kanjinya adalah : 度に（たびに）.",
+                examples: [
+                    { jp: `この${r("曲","きょく")}を${r("聞","き")}くたびに、${r("学生時代","がくせいじだい")}を${r("思","おも")}い${r("出","だ")}す。`, id: "Setiap kali mendengarkan lagu ini, aku selalu teringat masa sekolah." },
+                    { jp: `コンビニに${r("行","い")}くたびに、${r("余計","よけい")}なものを${r("買","か")}ってしまう。`, id: "Tiap ke konbini, aku selalu beli hal yang nggak perlu." }
+                ],
+                jlpt: [
+                    { jp: `${r("部長","ぶちょう")}が${r("東京","とうきょう")}へ${r("出張","しゅっちょう")}に${r("行","い")}くたびに${r("買","か")}ってきてくれるお${r("土産","みやげ")}のクッキーがとてもおいしいので、${r("私","わたし")}も${r("東京","とうきょう")}に${r("行","い")}くことがあったら、${r("買","か")}おうと${r("思","おも")}う。`, id: "Kue kering oleh-oleh yang selalu dibelikan kepala bagian setiap kali dia dinas ke Tokyo enak sekali, jadi kalau aku ke Tokyo, aku juga mau beli.", tag: "JLPT N3" },
+                    { jp: `${r("僕","ぼく")}、${r("試合","しあい")}の${r("度","たび")}に${r("緊張","きんちょう")}でお${r("腹","なか")}が${r("痛","いた")}くなるんだ。`, id: "Setiap kali ada pertandingan, perutku selalu sakit karena tegang.", tag: "JLPT N3 · Jul 2024 · choukai" }
+                ]
+            },
+            {
+                id: 46,
+                title: "46. 〜ごとに",
+                rumus: "Kata Kerja - VKamus\nKata Benda - ✅",
+                penjelasan: "Menyatakan bahwa sesuatu berulang atau dibagi per satuan yang disebutkan, seperti tiap waktu, tiap kelompok, atau tiap jenis.",
+                tips: "Kata Benda yang sering dipakai : 日ごとに、季節ごとに、国ごとに、1時間ごとに.\nKalau dipakai dengan Kata Kerja, artinya jadi \"setiap kali\", sama seperti 〜たびに : 会うごとに (setiap kali bertemu).\n\nBedanya dengan 〜たびに dan 〜おきに:\n〜ごとに - tiap satuan (waktu, jumlah, kelompok), berulang secara teratur\n〜たびに - setiap kali A terjadi, selalu B\n〜おきに - berselang, ada satuan yang dilewati : 1日おきに (selang sehari)",
+                examples: [
+                    { jp: `この${r("薬","くすり")}は6${r("時間","じかん")}ごとに${r("飲","の")}んでください。`, id: "Tolong minum obat ini setiap 6 jam." },
+                    { jp: `テストの${r("結果","けっか")}はクラスごとに${r("発表","はっぴょう")}されます。`, id: "Hasil ujian akan diumumkan per kelas." }
+                ],
+                jlpt: [
+                    { jp: `${r("一年中","いちねんじゅう")}${r("売","う")}っているパンのほかに${r("季節","きせつ")}ごとに${r("発売","はつばい")}されるパンもある。`, id: "Selain roti yang dijual sepanjang tahun, ada juga roti yang dijual khusus tiap musim.", tag: "JLPT N3" },
+                    { jp: `${r("広","ひろ")}い${r("会場","かいじょう")}で${r("会社","かいしゃ")}ごとに${r("場所","ばしょ")}が${r("分","わ")}かれてて${r("興味","きょうみ")}のある${r("会社","かいしゃ")}のところに${r("説明","せつめい")}を${r("聞","き")}きに${r("行","い")}くんだ。`, id: "Di aula yang luas itu, tempatnya dibagi-bagi per perusahaan, jadi kita datang ke tempat perusahaan yang kita minati untuk mendengarkan penjelasan.", tag: "JLPT N3 · Des 2024 · choukai" }
+                ]
+            },
+            {
+                id: 47,
+                title: "47. 〜させてもらう / 〜させていただく / 〜させてほしい",
+                rumus: "Kata Kerja Bentuk Kausatif + て",
+                penjelasan: "Menyatakan bahwa pembicara melakukan sesuatu atas izin lawan bicara, dengan cara yang sopan dan merendah.",
+                tips: "〜させてもらう lebih santai, 〜させていただく lebih sopan (keigo).\nBentuk 〜させていただきたい・〜させてもらいたい・〜させてほしい artinya «aku ingin diizinkan untuk; tolong izinkan aku untuk», dipakai untuk meminta izin.\nSama saja dengan させてください - tolong izinkan saya.\n\nCatatan penting :\nPada level yang lebih tinggi (termasuk pada kaiwa sehari-hari), bunpou ini bisa berfungsi sebagai kenjougo atau merendah.\nさせてもらう atau させていただく bisa berarti 「する」versi merendah, contoh :\n- 見させてもらいます → 見ます\n- 行かせていただきます → 行きます\n- 帰らせていただきます → 帰ります",
+                examples: [
+                    { jp: `${r("自分","じぶん")}の${r("気持","きも")}ちを${r("話","はな")}させてほしい。`, id: "Aku ingin diizinkan menyampaikan perasaanku." },
+                    { jp: `このプロジェクトを${r("担当","たんとう")}させてもらいたいと${r("思","おも")}っています。`, id: "Aku ingin diberi tanggung jawab atas proyek ini." }
+                ],
+                jlpt: [
+                    { jp: `${r("昨日","きのう")}${r("父","ちち")}に、${r("来週","らいしゅう")}${r("友達","ともだち")}と${r("旅行","りょこう")}に${r("行","い")}くので${r("車","くるま")}を${r("使","つか")}わせてほしいと${r("頼","たの")}んだが、${r("断","ことわ")}られてしまった。`, id: "Kemarin aku minta ke ayah, «Tolong izinkan aku pakai mobil, soalnya minggu depan aku mau jalan-jalan dengan teman», tapi ditolak.", tag: "JLPT N3" },
+                    { jp: `${r("明日","あした")}、ゼミの${r("後","あと")}の${r("勉強会","べんきょうかい")}、${r("私","わたし")}も${r("参加","さんか")}させてほしいんですが・・・。`, id: "Besok, di kelompok belajar setelah seminar, aku ingin diizinkan ikut juga...", tag: "JLPT N3 · Des 2025 · choukai" }
+                ]
+            },
+            {
+                id: 48,
+                title: "48. 〜としたら / 〜とすると",
+                rumus: "Kata Kerja - Bentuk Biasa\nKata Sifat i - ✅\nKata Sifat na - ＋だ atau tanpa tambahan\nKata Benda - ＋だ atau tanpa tambahan",
+                penjelasan: "Membayangkan suatu kondisi tertentu sebagai asumsi, lalu menyatakan konsekuensinya, pendapat, atau hasil yang mungkin terjadi.",
+                tips: "Ini sebenarnya sama saja dengan と・ば・たら tapi versi lebih berandai-andai.\nBiasanya kemungkinan terjadinya lebih kecil dari versi biasa.",
+                examples: [
+                    { jp: `${r("留学","りゅうがく")}するとしたら、アメリカに${r("行","い")}きたいです。`, id: "Kalau misalnya saya studi ke luar negeri, saya ingin ke Amerika." },
+                    { jp: `この${r("話","はなし")}が${r("本当","ほんとう")}だとすると、${r("大変","たいへん")}なことになる。`, id: "Kalau misalnya cerita ini benar, ini akan jadi masalah besar." },
+                    { jp: `${r("彼","かれ")}が${r("来","こ")}ないとしたら、${r("私","わたし")}たちだけでやるしかない。`, id: "Kalau misalnya dia tidak datang, kita harus melakukannya sendiri." }
+                ],
+                jlpt: [
+                    { jp: `そうだとすると、${r("私","わたし")}は${r("今","いま")}まで、とてももったいない${r("食","た")}べ${r("方","かた")}をしていたことになる。`, id: "Kalau memang benar begitu, berarti selama ini aku sudah makan (natto) dengan cara yang sayang sekali.", tag: "JLPT N3" },
+                    { jp: `${r("明日","あした")}から${r("休","やす")}みが${r("一週間","いっしゅうかん")}${r("取","と")}れるとしたら、どうする？`, id: "Kalau misalnya mulai besok kamu bisa libur seminggu, kamu mau ngapain?", tag: "JLPT N3 · Des 2019 · choukai" }
+                ]
+            }
+        ];
+
+        // DATA KOTOBA LENGKAP DAY 1 - DAY 41
+        const kotobaData = {
+            1: [
+                {ja: "熱（ねつ）", id: "panas (benda), demam"}, {ja: "咳（せき）", id: "batuk"},
+                {ja: "鼻水（はなみず）", id: "ingus"}, {ja: "頭痛（ずつう）", id: "sakit kepala"},
+                {ja: "腹痛（ふくつう）", id: "sakit perut"}, {ja: "吐き気（はきけ）", id: "mual, ingin muntah"},
+                {ja: "体調（たいちょう）", id: "kondisi badan (kesehatan)"}, {ja: "症状（しょうじょう）", id: "gejala (penyakit)"},
+                {ja: "病気（びょうき）", id: "sakit; penyakit"}, {ja: "風邪（かぜ）", id: "flu; pilek; masuk angin"},
+                {ja: "怪我（けが）", id: "cedera, luka"}, {ja: "疲れ（つかれ）", id: "kelelahan, rasa lelah"},
+                {ja: "診察（しんさつ）", id: "pemeriksaan medis"}, {ja: "検査（けんさ）", id: "pemeriksaan (barang, alat, badan)"},
+                {ja: "治療（ちりょう）", id: "pengobatan"}, {ja: "入院（にゅういん）", id: "masuk rumah sakit"},
+                {ja: "退院（たいいん）", id: "keluar rumah sakit"}, {ja: "薬（くすり）", id: "obat"},
+                {ja: "注射（ちゅうしゃ）", id: "suntikan"}, {ja: "看病（かんびょう）", id: "merawat orang sakit"},
+                {ja: "予防（よぼう）", id: "pencegahan"}, {ja: "治ります（なおります）", id: "sembuh"},
+                {ja: "診ます（みます）", id: "mengecek (kesehatan)"}, {ja: "冷やします（ひやします）", id: "mendinginkan"},
+                {ja: "冷えます（ひえます）", id: "menjadi dingin"}, {ja: "倒れます（たおれます）", id: "roboh ; pingsan"},
+                {ja: "健康（けんこう）", id: "sehat"}, {ja: "病院（びょういん）", id: "rumah sakit"},
+                {ja: "医者（いしゃ）", id: "dokter"}
+            ],
+            2: [
+                {ja: "起きます（おきます）", id: "bangun, terjadi"}, {ja: "寝ます（ねます）", id: "tidur"},
+                {ja: "履きます（はきます）", id: "memakai (celana, sepatu)"}, {ja: "寝坊（ねぼう）", id: "bangun kesiangan"},
+                {ja: "準備（じゅんび）", id: "persiapan"}, {ja: "歯磨き（はみがき）", id: "menggosok gigi"},
+                {ja: "化粧（けしょう）", id: "berdandan ; make up"}, {ja: "掃除（そうじ）", id: "bersih-bersih"},
+                {ja: "洗濯（せんたく）", id: "mencuci pakaian"}, {ja: "帰宅（きたく）", id: "pulang ke rumah"},
+                {ja: "出発（しゅっぱつ）", id: "berangkat"}, {ja: "到着（とうちゃく）", id: "tiba"},
+                {ja: "生活（せいかつ）", id: "kehidupan sehari-hari"}, {ja: "今晩（こんばん）", id: "malam ini"},
+                {ja: "夕方（ゆうがた）", id: "sore; senja"}, {ja: "晩（ばん）", id: "malam"},
+                {ja: "夜中（よなか）", id: "tengah malam"}, {ja: "週末（しゅうまつ）", id: "akhir pekan"},
+                {ja: "次（つぎ）", id: "berikutnya"}, {ja: "布団（ふとん）", id: "kasur"},
+                {ja: "枕（まくら）", id: "bantal"}, {ja: "鍵（かぎ）", id: "kunci"},
+                {ja: "歯ブラシ（はぶらし）", id: "sikat gigi"}, {ja: "服（ふく）", id: "pakaian"},
+                {ja: "靴（くつ）", id: "sepatu"}, {ja: "眼鏡（めがね）", id: "kacamata"},
+                {ja: "腕時計（うでどけい）", id: "jam tangan"}, {ja: "洗濯物（せんたくもの）", id: "cucian (pakaian)"}
+            ],
+            3: [
+                {ja: "卵（たまご）", id: "telur"}, {ja: "米（こめ）", id: "beras"},
+                {ja: "塩（しお）", id: "garam"}, {ja: "砂糖（さとう）", id: "gula pasir"},
+                {ja: "油（あぶら）", id: "minyak"}, {ja: "野菜（やさい）", id: "sayur"},
+                {ja: "果物（くだもの）", id: "buah"}, {ja: "牛乳（ぎゅうにゅう）", id: "susu sapi"},
+                {ja: "弁当（べんとう）", id: "bekal"}, {ja: "お菓子（おかし）", id: "snack, jajan"},
+                {ja: "酒（さけ）", id: "sake"}, {ja: "氷（こおり）", id: "es batu"},
+                {ja: "お湯（おゆ）", id: "air panas"}, {ja: "粉（こな）", id: "bubuk; tepung"},
+                {ja: "缶（かん）", id: "kaleng"}, {ja: "瓶（びん）", id: "botol kaca"},
+                {ja: "包丁（ほうちょう）", id: "pisau dapur"}, {ja: "フライパン", id: "penggorengan"},
+                {ja: "冷蔵庫（れいぞうこ）", id: "kulkas"}, {ja: "冷凍庫（れいとうこ）", id: "freezer"},
+                {ja: "電子レンジ（でんしれんじ）", id: "microwave"}, {ja: "食器（しょっき）", id: "peralatan makan"},
+                {ja: "晩ご飯（ばんごはん）", id: "makan malam (sehari-hari)"}, {ja: "定食（ていしょく）", id: "makanan satu set"},
+                {ja: "キャベツ", id: "kol, kubis"}, {ja: "調味料（ちょうみりょう）", id: "bumbu, rempah"},
+                {ja: "唐辛子（とうがらし）", id: "cabai"}, {ja: "納豆（なっとう）", id: "nattou"}
+            ],
+            4: [
+                {ja: "値段（ねだん）", id: "harga"}, {ja: "お釣り（おつり）", id: "kembalian"},
+                {ja: "小銭（こぜに）", id: "uang receh"}, {ja: "お札（おさつ）", id: "uang kertas"},
+                {ja: "給料（きゅうりょう）", id: "gaji"}, {ja: "時給（じきゅう）", id: "gaji per jam"},
+                {ja: "商品（しょうひん）", id: "barang dagangan"}, {ja: "割引（わりびき）", id: "diskon"},
+                {ja: "無料（むりょう）", id: "gratis"}, {ja: "バーゲンセール", id: "obral; sale"},
+                {ja: "ブランド", id: "brand, merk"}, {ja: "得（とく）", id: "keuntungan"},
+                {ja: "家賃（やちん）", id: "biaya sewa rumah"}, {ja: "交通費（こうつうひ）", id: "biaya transportasi"},
+                {ja: "電気代（でんきだい）", id: "tagihan listrik"}, {ja: "税金（ぜいきん）", id: "pajak"},
+                {ja: "袋（ふくろ）", id: "kantong (plastik, kertas, dll)"}, {ja: "払います（はらいます）", id: "membayar"},
+                {ja: "返します（かえします）", id: "mengembalikan (ke pemilik)"}, {ja: "選びます（えらびます）", id: "memilih"},
+                {ja: "探します（さがします）", id: "mencari yang diinginkan (pekerjaan, barang, rumah)"}, {ja: "比べます（くらべます）", id: "membandingkan"},
+                {ja: "決めます（きめます）", id: "memutuskan, menentukan"}, {ja: "並びます（ならびます）", id: "berjajar, berbaris"},
+                {ja: "包みます（つつみます）", id: "membungkus"}, {ja: "渡します（わたします）", id: "menyerahkan"},
+                {ja: "足ります（たります）", id: "cukup; mencukupi"}, {ja: "貯めます（ためます）", id: "menabung, mengumpulkan"}
+            ],
+            5: [
+                {ja: "上司（じょうし）", id: "atasan (di tempat kerja)"}, {ja: "部下（ぶか）", id: "bawahan"},
+                {ja: "同僚（どうりょう）", id: "rekan kerja"}, {ja: "社員（しゃいん）", id: "pegawai (anggota perusahaan)"},
+                {ja: "受付（うけつけ）", id: "meja resepsionis"}, {ja: "通勤（つうきん）", id: "pulang pergi kerja, perjalanan ke tempat kerja"},
+                {ja: "遅刻（ちこく）", id: "terlambat"}, {ja: "早退（そうたい）", id: "pulang lebih awal"},
+                {ja: "残業（ざんぎょう）", id: "lembur"}, {ja: "休憩（きゅうけい）", id: "istirahat"},
+                {ja: "交代（こうたい）", id: "pergantian orang (giliran)"}, {ja: "作業（さぎょう）", id: "pekerjaan (hal yang dilakukan)"},
+                {ja: "協力（きょうりょく）", id: "kerja sama"}, {ja: "担当（たんとう）", id: "bertanggung jawab, yang bertugas menangani"},
+                {ja: "責任（せきにん）", id: "tanggung jawab"}, {ja: "報告（ほうこく）", id: "laporan"},
+                {ja: "確認（かくにん）", id: "pengecekan; memastikan"}, {ja: "指示（しじ）", id: "arahan; instruksi"},
+                {ja: "記入（きにゅう）", id: "mengisi dengan tulisan"}, {ja: "書類（しょるい）", id: "dokumen (sertifikat, surat pernyataan, dll)"},
+                {ja: "名刺（めいし）", id: "kartu nama"}, {ja: "印鑑（いんかん）", id: "stempel, cap"},
+                {ja: "資格（しかく）", id: "sertifikat kualifikasi"}, {ja: "免許（めんきょ）", id: "surat izin, sertifikat izin"},
+                {ja: "就職（しゅうしょく）", id: "mendapat pekerjaan"}, {ja: "面接（めんせつ）", id: "wawancara kerja; interview"},
+                {ja: "契約（けいやく）", id: "kontrak, perjanjian"}, {ja: "規則（きそく）", id: "peraturan"},
+                {ja: "成功（せいこう）", id: "berhasil, sukses"}
+            ],
+            6: [
+                {ja: "天気予報（てんきよほう）", id: "ramalan cuaca"}, {ja: "晴れ（はれ）", id: "cuaca cerah"},
+                {ja: "曇り（くもり）", id: "cuaca berawan"}, {ja: "大雨（おおあめ）", id: "hujan lebat"},
+                {ja: "大雪（おおゆき）", id: "salju lebat"}, {ja: "台風（たいふう）", id: "badai, angin topan"},
+                {ja: "気候（きこう）", id: "iklim"}, {ja: "湿気（しっけ）", id: "kelembapan; udara lembap"},
+                {ja: "空（そら）", id: "langit"}, {ja: "太陽（たいよう）", id: "matahari"},
+                {ja: "空気（くうき）", id: "udara"}, {ja: "地震（じしん）", id: "gempa bumi"},
+                {ja: "海岸（かいがん）", id: "pantai"}, {ja: "波（なみ）", id: "ombak ; gelombang"},
+                {ja: "島（しま）", id: "pulau"}, {ja: "湖（みずうみ）", id: "danau"},
+                {ja: "森（もり）", id: "hutan (lebat, luas)"}, {ja: "林（はやし）", id: "hutan kecil (kumpulan pohon)"},
+                {ja: "草（くさ）", id: "rumput"}, {ja: "葉（は）", id: "daun"},
+                {ja: "枝（えだ）", id: "ranting pohon"}, {ja: "桜（さくら）", id: "bunga sakura"},
+                {ja: "紅葉（こうよう）", id: "daun pohon musim gugur"}, {ja: "植物（しょくぶつ）", id: "tanaman"},
+                {ja: "動物（どうぶつ）", id: "binatang"}, {ja: "虫（むし）", id: "serangga"},
+                {ja: "自然（しぜん）", id: "alam, alami"}, {ja: "景色（けしき）", id: "pemandangan"}
+            ],
+            7: [
+                {ja: "授業（じゅぎょう）", id: "pelajaran"}, {ja: "科目（かもく）", id: "mata pelajaran"},
+                {ja: "数学（すうがく）", id: "matematika"}, {ja: "歴史（れきし）", id: "sejarah"},
+                {ja: "英語（えいご）", id: "bahasa Inggris"}, {ja: "宿題（しゅくだい）", id: "PR"},
+                {ja: "予習（よしゅう）", id: "belajar persiapan"}, {ja: "復習（ふくしゅう）", id: "belajar ulang"},
+                {ja: "練習（れんしゅう）", id: "latihan"}, {ja: "暗記（あんき）", id: "menghafal di luar kepala"},
+                {ja: "作文（さくぶん）", id: "karangan"}, {ja: "試験（しけん）", id: "ujian"},
+                {ja: "合格（ごうかく）", id: "lulus"}, {ja: "不合格（ふごうかく）", id: "tidak lulus"},
+                {ja: "答え（こたえ）", id: "jawaban"}, {ja: "質問（しつもん）", id: "pertanyaan"},
+                {ja: "出席（しゅっせき）", id: "hadir (di acara, rapat, atau pelajaran)"}, {ja: "欠席（けっせき）", id: "tidak hadir, absen"},
+                {ja: "教科書（きょうかしょ）", id: "buku pelajaran"}, {ja: "辞書（じしょ）", id: "kamus"},
+                {ja: "黒板（こくばん）", id: "papan tulis (hitam)"}, {ja: "地図（ちず）", id: "peta"},
+                {ja: "単語（たんご）", id: "kosakata"}, {ja: "漢字（かんじ）", id: "kanji"},
+                {ja: "字（じ）", id: "huruf, tulisan"}, {ja: "言葉（ことば）", id: "kata"},
+                {ja: "知識（ちしき）", id: "pengetahuan"}, {ja: "専門（せんもん）", id: "kejuruan, ahli, jurusan"}
+            ],
+            8: [
+                {ja: "都市（とし）", id: "kota"}, {ja: "郊外（こうがい）", id: "daerah pinggiran kota"},
+                {ja: "住所（じゅうしょ）", id: "alamat"}, {ja: "駅前（えきまえ）", id: "depan stasiun"},
+                {ja: "歩道（ほどう）", id: "jalan untuk pejalan kaki"}, {ja: "高速道路（こうそくどうろ）", id: "jalan tol"},
+                {ja: "橋（はし）", id: "jembatan"}, {ja: "停留所（ていりゅうじょ）", id: "halte"},
+                {ja: "空港（くうこう）", id: "bandara"}, {ja: "港（みなと）", id: "pelabuhan"},
+                {ja: "郵便局（ゆうびんきょく）", id: "kantor pos"}, {ja: "図書館（としょかん）", id: "perpustakaan"},
+                {ja: "市役所（しやくしょ）", id: "kantor kota"}, {ja: "交番（こうばん）", id: "pos polisi, kantor polisi"},
+                {ja: "薬局（やっきょく）", id: "apotek"}, {ja: "寺（てら）", id: "kuil buddha"},
+                {ja: "神社（じんじゃ）", id: "kuil shinto"}, {ja: "教会（きょうかい）", id: "gereja"},
+                {ja: "美術館（びじゅつかん）", id: "museum"}, {ja: "体育館（たいいくかん）", id: "gedung olahraga"},
+                {ja: "動物園（どうぶつえん）", id: "kebun binatang"}, {ja: "遊園地（ゆうえんち）", id: "taman bermain"},
+                {ja: "喫茶店（きっさてん）", id: "kafe"}, {ja: "食堂（しょくどう）", id: "kantin, tempat makan"},
+                {ja: "旅館（りょかん）", id: "penginapan"}, {ja: "窓口（まどぐち）", id: "loket"},
+                {ja: "案内所（あんないじょ）", id: "meja informasi"}, {ja: "非常口（ひじょうぐち）", id: "pintu darurat"}
+            ],
+            9: [
+                {ja: "警察官（けいさつかん）", id: "polisi"}, {ja: "看護師（かんごし）", id: "perawat"},
+                {ja: "歯医者（はいしゃ）", id: "dokter gigi"}, {ja: "駅員（えきいん）", id: "pegawai stasiun"},
+                {ja: "運転手（うんてんしゅ）", id: "supir"}, {ja: "銀行員（ぎんこういん）", id: "pegawai bank"},
+                {ja: "公務員（こうむいん）", id: "PNS"}, {ja: "教師（きょうし）", id: "guru"},
+                {ja: "校長（こうちょう）", id: "kepala sekolah"}, {ja: "担任（たんにん）", id: "wali kelas"},
+                {ja: "生徒（せいと）", id: "murid"}, {ja: "同級生（どうきゅうせい）", id: "teman satu angkatan"},
+                {ja: "留学生（りゅうがくせい）", id: "pelajar asing"}, {ja: "記者（きしゃ）", id: "wartawan, jurnalis"},
+                {ja: "画家（がか）", id: "pelukis"}, {ja: "選手（せんしゅ）", id: "atlet"},
+                {ja: "主婦（しゅふ）", id: "ibu rumah tangga"}, {ja: "両親（りょうしん）", id: "kedua orang tua"},
+                {ja: "祖父（そふ）", id: "kakek"}, {ja: "祖母（そぼ）", id: "nenek"},
+                {ja: "孫（まご）", id: "cucu"}, {ja: "妻（つま）", id: "istri"},
+                {ja: "親友（しんゆう）", id: "teman baik, sahabat"}, {ja: "観光客（かんこうきゃく）", id: "turis"},
+                {ja: "乗客（じょうきゃく）", id: "penumpang"}, {ja: "お年寄り（おとしより）", id: "lansia"},
+                {ja: "若者（わかもの）", id: "anak muda"}, {ja: "泥棒（どろぼう）", id: "pencuri"},
+                {ja: "相談（そうだん）", id: "konsultasi, meminta saran"}
+            ],
+            10: [
+                {ja: "部屋（へや）", id: "kamar"}, {ja: "台所（だいどころ）", id: "dapur"},
+                {ja: "寝室（しんしつ）", id: "kamar tidur"}, {ja: "廊下（ろうか）", id: "koridor, lorong"},
+                {ja: "玄関（げんかん）", id: "pintu depan"}, {ja: "お風呂場（おふろば）", id: "kamar mandi"},
+                {ja: "お手洗い（おてあらい）", id: "toilet"}, {ja: "洗面所（せんめんじょ）", id: "tempat cuci muka"},
+                {ja: "壁（かべ）", id: "dinding, tembok"}, {ja: "床（ゆか）", id: "lantai"},
+                {ja: "天井（てんじょう）", id: "langit-langit, plafon"}, {ja: "屋根（やね）", id: "atap"},
+                {ja: "窓（まど）", id: "jendela"}, {ja: "畳（たたみ）", id: "tatami"},
+                {ja: "門（もん）", id: "gerbang"}, {ja: "庭（にわ）", id: "halaman"},
+                {ja: "車庫（しゃこ）", id: "garasi"}, {ja: "屋上（おくじょう）", id: "rooftop (bagian paling atas)"},
+                {ja: "家具（かぐ）", id: "perabotan rumah, furnitur"}, {ja: "棚（たな）", id: "rak"},
+                {ja: "本棚（ほんだな）", id: "rak buku"}, {ja: "机（つくえ）", id: "meja"},
+                {ja: "引き出し（ひきだし）", id: "laci"}, {ja: "鏡（かがみ）", id: "cermin"},
+                {ja: "電気（でんき）", id: "listrik"}, {ja: "洗濯機（せんたくき）", id: "mesin cuci"},
+                {ja: "掃除機（そうじき）", id: "penyedot debu (vacuum cleaner)"}, {ja: "冷房（れいぼう）", id: "pendingin ruangan, AC"},
+                {ja: "暖房（だんぼう）", id: "penghangat ruangan"}
+            ],
+            11: [
+                {ja: "挨拶（あいさつ）", id: "salam"}, {ja: "お辞儀（おじぎ）", id: "membungkuk hormat"},
+                {ja: "握手（あくしゅ）", id: "berjabat tangan"}, {ja: "紹介（しょうかい）", id: "memperkenalkan"},
+                {ja: "招待（しょうたい）", id: "mengundang"}, {ja: "訪問（ほうもん）", id: "kunjungan"},
+                {ja: "連絡（れんらく）", id: "kontak, menghubungi"}, {ja: "返事（へんじ）", id: "merespon, membalas pesan"},
+                {ja: "伝言（でんごん）", id: "titipan pesan (lisan)"}, {ja: "説明（せつめい）", id: "menjelaskan"},
+                {ja: "発表（はっぴょう）", id: "pengumuman, presentasi"}, {ja: "通訳（つうやく）", id: "terjemahan bicara, interpretasi"},
+                {ja: "賛成（さんせい）", id: "setuju"}, {ja: "反対（はんたい）", id: "menentang ; tidak setuju ; berlawanan ; kebalikan"},
+                {ja: "議論（ぎろん）", id: "diskusi ; debat"}, {ja: "感謝（かんしゃ）", id: "rasa berterima kasih"},
+                {ja: "お詫び（おわび）", id: "permintaan maaf"}, {ja: "心配（しんぱい）", id: "khawatir"},
+                {ja: "安心（あんしん）", id: "lega, tidak khawatir"}, {ja: "満足（まんぞく）", id: "puas"},
+                {ja: "我慢（がまん）", id: "menahan diri"}, {ja: "遠慮（えんりょ）", id: "sungkan; segan"},
+                {ja: "緊張（きんちょう）", id: "gugup"}, {ja: "失礼（しつれい）", id: "tidak sopan"},
+                {ja: "迷惑（めいわく）", id: "gangguan; hal yang merepotkan orang lain"}, {ja: "冗談（じょうだん）", id: "candaan; lelucon"},
+                {ja: "噂（うわさ）", id: "gosip; desas-desus"}, {ja: "自信（じしん）", id: "percaya diri"},
+                {ja: "努力（どりょく）", id: "upaya, usaha, kerja keras"}
+            ],
+            12: [
+                {ja: "落とします（おとします）", id: "menjatuhkan"}, {ja: "落ちます（おちます）", id: "jatuh"},
+                {ja: "壊します（こわします）", id: "merusak"}, {ja: "壊れます（こわれます）", id: "rusak"},
+                {ja: "割ります（わります）", id: "memecahkan, membagi"}, {ja: "割れます（われます）", id: "pecah"},
+                {ja: "変えます（かえます）", id: "mengubah"}, {ja: "変わります（かわります）", id: "berubah"},
+                {ja: "集めます（あつめます）", id: "mengumpulkan"}, {ja: "集まります（あつまります）", id: "terkumpul, berkumpul"},
+                {ja: "見つけます（みつけます）", id: "menemukan"}, {ja: "見つかります（みつかります）", id: "ketemu"},
+                {ja: "沸かします（わかします）", id: "mendidihkan air"}, {ja: "沸きます（わきます）", id: "mendidih"},
+                {ja: "始めます（はじめます）", id: "memulai"}, {ja: "始まります（はじまります）", id: "mulai"},
+                {ja: "開けます（あけます）", id: "membuka"}, {ja: "閉めます（しめます）", id: "menutup"},
+                {ja: "付けます（つけます）", id: "memasang, menempelkan (menyatukan)"}, {ja: "消します（けします）", id: "menghapus"},
+                {ja: "掛けます（かけます）", id: "menggantung"}, {ja: "並べます（ならべます）", id: "membariskan, menata agar rapi"},
+                {ja: "拭きます（ふきます）", id: "mengelap"}, {ja: "磨きます（みがきます）", id: "menggosok"},
+                {ja: "直します（なおします）", id: "memperbaiki"}, {ja: "干します（ほします）", id: "menjemur"},
+                {ja: "温めます（あたためます）", id: "menghangatkan (suhu benda)"}, {ja: "運びます（はこびます）", id: "mengangkut"},
+                {ja: "立てます（たてます）", id: "mendirikan"}
+            ],
+            13: [
+                {ja: "眠い（ねむい）", id: "mengantuk"}, {ja: "優しい（やさしい）", id: "baik hati"},
+                {ja: "厳しい（きびしい）", id: "ketat ; keras"}, {ja: "細い（ほそい）", id: "tipis, kurus"},
+                {ja: "深い（ふかい）", id: "dalam (kedalaman)"}, {ja: "忙しい（いそがしい）", id: "sibuk"},
+                {ja: "怖い（こわい）", id: "takut, seram"}, {ja: "難しい（むずかしい）", id: "sulit, susah"},
+                {ja: "珍しい（めずらしい）", id: "langka, jarang"}, {ja: "軽い（かるい）", id: "ringan"},
+                {ja: "嬉しい（うれしい）", id: "senang"}, {ja: "寂しい（さびしい）", id: "kesepian (sedih)"},
+                {ja: "恥ずかしい（はずかしい）", id: "malu"}, {ja: "眩しい（まぶしい）", id: "silau"},
+                {ja: "清潔（せいけつ）", id: "bersih, higienis"}, {ja: "賑やか（にぎやか）", id: "ramai (suara)"},
+                {ja: "安全（あんぜん）", id: "aman"}, {ja: "危険（きけん）", id: "berbahaya"},
+                {ja: "真面目（まじめ）", id: "serius"}, {ja: "丁寧（ていねい）", id: "sopan; teliti dan hati-hati"},
+                {ja: "熱心（ねっしん）", id: "rajin, tekun"}, {ja: "暇（ひま）", id: "senggang, tidak ada kegiatan"},
+                {ja: "得意（とくい）", id: "jago; mahir"}, {ja: "苦手（にがて）", id: "tidak jago, tidak suka"},
+                {ja: "面倒（めんどう）", id: "merepotkan"}, {ja: "無駄（むだ）", id: "sia-sia; tidak ada gunanya"},
+                {ja: "正直（しょうじき）", id: "jujur"}, {ja: "新鮮（しんせん）", id: "fresh, segar"},
+                {ja: "特別（とくべつ）", id: "spesial"}, {ja: "出かけます（でかけます）", id: "bepergian"},
+                {ja: "写真（しゃしん）", id: "foto"}, {ja: "自分（じぶん）", id: "diri sendiri; sendiri (melakukan)"},
+                {ja: "休みます（やすみます）", id: "istirahat; libur; tidak masuk (kerja, sekolah)"}
+            ],
+            14: [
+                {ja: "顔（かお）", id: "muka, wajah"}, {ja: "頭（あたま）", id: "kepala"},
+                {ja: "髪（かみ）", id: "rambut"}, {ja: "目（め）", id: "mata"},
+                {ja: "鼻（はな）", id: "hidung"}, {ja: "口（くち）", id: "mulut"},
+                {ja: "唇（くちびる）", id: "bibir"}, {ja: "歯（は）", id: "gigi"},
+                {ja: "舌（した）", id: "lidah"}, {ja: "耳（みみ）", id: "telinga"},
+                {ja: "喉（のど）", id: "tenggorokan"}, {ja: "首（くび）", id: "leher"},
+                {ja: "肩（かた）", id: "bahu"}, {ja: "胸（むね）", id: "dada"},
+                {ja: "背中（せなか）", id: "punggung"}, {ja: "腰（こし）", id: "pinggang"},
+                {ja: "お腹（おなか）", id: "perut (sehari-hari, sopan)"}, {ja: "腕（うで）", id: "lengan"},
+                {ja: "肘（ひじ）", id: "siku"}, {ja: "手（て）", id: "tangan"},
+                {ja: "手首（てくび）", id: "pergelangan tangan"}, {ja: "指（ゆび）", id: "jari"},
+                {ja: "親指（おやゆび）", id: "ibu jari"}, {ja: "爪（つめ）", id: "kuku"},
+                {ja: "足（あし）", id: "kaki"}, {ja: "膝（ひざ）", id: "lutut"},
+                {ja: "骨（ほね）", id: "tulang"}, {ja: "涙（なみだ）", id: "air mata"},
+                {ja: "汗（あせ）", id: "keringat"}
+            ],
+            15: [
+                {ja: "増やします（ふやします）", id: "menambah jumlahnya"}, {ja: "増えます（ふえます）", id: "bertambah"},
+                {ja: "高まります（たかまります）", id: "menjadi tinggi, naik"}, {ja: "広がる（ひろがります）", id: "tersebar"},
+                {ja: "膨らみます（ふくらみます）", id: "mengembang; membengkak (jumlahnya membesar)"}, {ja: "広まります（ひろまります）", id: "tersebar"},
+                {ja: "加えます（くわえます）", id: "menambahkan"}, {ja: "伸びます（のびます）", id: "memanjang; tumbuh (tinggi badan); meningkat (penjualan, nilai)"},
+                {ja: "深まります（ふかまります）", id: "menjadi lebih dalam"}, {ja: "足します（たします）", id: "menambahkan (karena kurang)"},
+                {ja: "伸ばします（のばします）", id: "memperpanjang"}, {ja: "強まります（つよまります）", id: "menjadi kuat, menguat"},
+                {ja: "高めます（たかめます）", id: "meninggikan, menaikkan"}, {ja: "広げます（ひろげます）", id: "membentangkan; memperluas"},
+                {ja: "加わります（くわわります）", id: "bertambah; ikut bergabung"}, {ja: "上げます（あげます）", id: "menaikkan"},
+                {ja: "含みます（ふくみます）", id: "termasuk"}, {ja: "強めます（つよめます）", id: "menguatkan"},
+                {ja: "深めます（ふかめます）", id: "membuat jadi lebih dalam"}, {ja: "積みます（つみます）", id: "menumpuk (ke atas)"},
+                {ja: "広めます（ひろめます）", id: "menyebarluaskan"}, {ja: "引っ張ります（ひっぱります）", id: "menarik dengan kuat"},
+                {ja: "積もります（つもります）", id: "bertumpukan"}, {ja: "超えます（こえます）", id: "melampaui"},
+                {ja: "延ばします（のばします）", id: "memperpanjang (waktu)"}, {ja: "余ります（あまります）", id: "berlebih ; tersisa"},
+                {ja: "大き過ぎます（おおきすぎます）", id: "terlalu besar"}, {ja: "太ります（ふとります）", id: "menjadi gemuk"},
+                {ja: "重ねます（かさねます）", id: "menumpuk ; menambahkan satu demi satu"}, {ja: "量ります（はかります）", id: "menimbang berat, mengukur volume"},
+                {ja: "減ります（へります）", id: "berkurang"}, {ja: "減らします（へらします）", id: "mengurangi"},
+                {ja: "残ります（のこります）", id: "tersisa"}, {ja: "荷物（にもつ）", id: "barang bawaan"}
+            ],
+            16: [
+                {ja: "暖めます（あたためます）", id: "menghangatkan (suhu udara)"}, {ja: "暖まります（あたたまります）", id: "menjadi hangat (suhu udara)"},
+                {ja: "冷めます（さめます）", id: "menjadi dingin (dari panas ke normal)"}, {ja: "乾かします（かわかします）", id: "mengeringkan"},
+                {ja: "乾きます（かわきます）", id: "menjadi kering; mengering"}, {ja: "濡らします（ぬらします）", id: "membasahi"},
+                {ja: "濡れます（ぬれます）", id: "menjadi basah"}, {ja: "溶きます（ときます）", id: "melarutkan (bubuk) ke dalam cairan"},
+                {ja: "溶けます（とけます）", id: "meleleh; mencair"}, {ja: "燃やします（もやします）", id: "membakar"},
+                {ja: "燃えます（もえます）", id: "terbakar"}, {ja: "焼きます（やきます）", id: "memanggang, membakar"},
+                {ja: "焼けます（やけます）", id: "terpanggang"}, {ja: "煮ます（にます）", id: "merebus dengan waktu lama dan ada rasanya"},
+                {ja: "煮えます（にえます）", id: "menjadi matang (karena direbus)"}, {ja: "炊きます（たきます）", id: "menanak (nasi)"},
+                {ja: "炊けます（たけます）", id: "matang (nasi)"}, {ja: "流します（ながします）", id: "mengalirkan; menghanyutkan"},
+                {ja: "流れます（ながれます）", id: "mengalir"}, {ja: "凍ります（こおります）", id: "membeku"},
+                {ja: "出来上がります（できあがります）", id: "selesai sepenuhnya ; jadi (masakan, laporan)"}, {ja: "温度（おんど）", id: "suhu (derajat)"},
+                {ja: "気温（きおん）", id: "suhu udara"}, {ja: "体温（たいおん）", id: "suhu badan"},
+                {ja: "煙（けむり）", id: "asap"}, {ja: "生（なま）", id: "mentah"},
+                {ja: "ぬるい（ぬるい）", id: "tidak panas, tidak dingin"}, {ja: "蒸し暑い（むしあつい）", id: "panas pengap"},
+                {ja: "火傷（やけど）", id: "luka bakar"}, {ja: "冷凍（れいとう）", id: "bekal, membekukan"}
+            ],
+            17: [
+                {ja: "届けます（とどけます）", id: "mengantar barang"}, {ja: "届きます（とどきます）", id: "sampai (barang)"},
+                {ja: "預けます（あずけます）", id: "menitipkan"}, {ja: "預かります（あずかります）", id: "menjaga titipan"},
+                {ja: "配ります（くばります）", id: "membagikan"}, {ja: "受け取ります（うけとります）", id: "menerima langsung (dengan tangan)"},
+                {ja: "譲ります（ゆずります）", id: "mengalah ; menyerahkan kepada yang lain"}, {ja: "任せます（まかせます）", id: "mempercayakan, menyerahkan"},
+                {ja: "贈ります（おくります）", id: "mengirim hadiah"}, {ja: "申し込みます（もうしこみます）", id: "mendaftar"},
+                {ja: "受け付けます（うけつけます）", id: "menerima pendaftaran"}, {ja: "支払います（しはらいます）", id: "membayar"},
+                {ja: "振り込みます（ふりこみます）", id: "mengirim uang (via atm)"}, {ja: "払い戻します（はらいもどします）", id: "mengembalikan uang (yang sudah dibayarkan); me-refund"},
+                {ja: "断ります（ことわります）", id: "menolak"}, {ja: "頼みます（たのみます）", id: "meminta bantuan ; meminta tolong"},
+                {ja: "引き受けます（ひきうけます）", id: "menyanggupi; menerima tugas atau tanggung jawab"}, {ja: "伝えます（つたえます）", id: "menyampaikan"},
+                {ja: "伝わります（つたわります）", id: "tersampaikan"}, {ja: "知らせます（しらせます）", id: "memberi tahu"},
+                {ja: "確かめます（たしかめます）", id: "memastikan"}, {ja: "済ませます（すませます）", id: "menyelesaikan"},
+                {ja: "済みます（すみます）", id: "beres ; selesai"}, {ja: "書留（かきとめ）", id: "surat/pos tercatat (registered mail)"},
+                {ja: "連絡先（れんらくさき）", id: "informasi kontak"}, {ja: "はんこ", id: "stempel, cap"},
+                {ja: "封筒（ふうとう）", id: "amplop"}, {ja: "締め切り（しめきり）", id: "tenggat (pengumpulan, pendaftaran)"},
+                {ja: "期限（きげん）", id: "batas waktu; masa berlaku"}, {ja: "係（かかり）", id: "petugas yang menangani satu urusan"}
+            ],
+            18: [
+                {ja: "片付けます（かたづけます）", id: "beres-des; membereskan"}, {ja: "片付きます（かたづきます）", id: "menjadi rapi"},
+                {ja: "散らかします（ちらかします）", id: "mengacaukan, membuat jadi berantakan"}, {ja: "散らかります（ちらかります）", id: "berantakan; berserakan (barang)"},
+                {ja: "汚します（よごします）", id: "mengotori"}, {ja: "こぼします", id: "menumpahkan"},
+                {ja: "こぼれます（こぼれます）", id: "tumpah"}, {ja: "詰めます（つめます）", id: "memasukkan sesuatu (sampai penuh)"},
+                {ja: "詰まります（つまります）", id: "tersumbat"}, {ja: "混ぜます（まぜます）", id: "mencampur"},
+                {ja: "混ざります（まざります）", id: "bercampur, tercampur"}, {ja: "混じります（まじります）", id: "tercampur ; terselip"},
+                {ja: "載せます（のせます）", id: "memuat (barang, artikel)"}, {ja: "載ります（のります）", id: "dimuat"},
+                {ja: "外します（はずします）", id: "melepaskan"}, {ja: "外れます（はずれます）", id: "lepas; meleset; keluar dari (tugas, daftar, kelompok)"},
+                {ja: "回します（まわします）", id: "memutar"}, {ja: "回ります（まわります）", id: "berputar, mengelilingi"},
+                {ja: "温まります（あたたまります）", id: "menjadi hangat (suhu benda)"}, {ja: "冷ます（さます）", id: "mendinginkan (dari panas ke normal)"},
+                {ja: "掃きます（はきます）", id: "menyapu"}, {ja: "畳みます（たたみます）", id: "melipat"},
+                {ja: "飾ります（かざります）", id: "menghias"}, {ja: "しまいます（しまいます）", id: "menyimpan (ke tempatnya)"},
+                {ja: "破ります（やぶります）", id: "merobek"}, {ja: "下ろします（おろします）", id: "menurunkan (barang); menarik uang"},
+                {ja: "戻ります（もどります）", id: "kembali (ke tempat semula)"}, {ja: "転がります（ころがります）", id: "menggelinding; terguling"},
+                {ja: "埋めます（うめます）", id: "mengubur"}, {ja: "整理（せいり）", id: "merapikan"},
+                {ja: "綺麗（きれい）", id: "cantik, bersih, indah"}
+            ],
+            19: [
+                {ja: "動かします（うごかします）", id: "menggerakkan"}, {ja: "動きます（うごきます）", id: "bergerak"},
+                {ja: "曲げます（まげます）", id: "membengkokkan"}, {ja: "曲がります（まがります）", id: "belok"},
+                {ja: "進めます（すすめます）", id: "melanjutkan"}, {ja: "進みます（すすみます）", id: "maju"},
+                {ja: "通します（とおします）", id: "melewatkan, menembus"}, {ja: "通ります（とおります）", id: "melewati, lewat"},
+                {ja: "近づけます（ちかづけます）", id: "mendekatkan"}, {ja: "近づきます（ちかづきます）", id: "mendekat"},
+                {ja: "離します（はなします）", id: "menjauhkan, memisahkan"}, {ja: "離れます（はなれます）", id: "menjauh; berpisah dari tempat atau orang"},
+                {ja: "揺らします（ゆらします）", id: "menggetarkan, menggoyangkan"}, {ja: "揺れます（ゆれます）", id: "bergoyang"},
+                {ja: "繋げます（つなげます）", id: "menyambungkan (abstrak)"}, {ja: "繋がります（つながります）", id: "tersambung"},
+                {ja: "合わせます（あわせます）", id: "mencocokkan ; menyesuaikan"}, {ja: "合います（あいます）", id: "pas, sesuai"},
+                {ja: "分けます（わけます）", id: "membagi"}, {ja: "分かれます（わかれます）", id: "dibagi, terbagi"},
+                {ja: "どけます（どけます）", id: "menyingkirkan benda ke tempat lain"}, {ja: "どきます（どきます）", id: "minggir"},
+                {ja: "向けます（むけます）", id: "menghadapkan"}, {ja: "向きます（むきます）", id: "menghadap"},
+                {ja: "立ち止まります（たちどまります）", id: "berhenti (dari jalan)"}, {ja: "すれ違います（すれちがいます）", id: "saling berpapasan"},
+                {ja: "ぶつかります（ぶつかります）", id: "bertabrakan"}, {ja: "追い越します（おいこします）", id: "menyalip; melampaui"},
+                {ja: "方向（ほうこう）", id: "arah"}, {ja: "速度（そくど）", id: "kecepatan"}
+            ],
+            20: [
+                {ja: "理由（りゆう）", id: "alasan (sebab yang jelas)"}, {ja: "訳（わけ）", id: "alasan (latar belakang, maksud)"},
+                {ja: "原因（げんいん）", id: "penyebab"}, {ja: "結果（けっか）", id: "hasil"},
+                {ja: "影響（えいきょう）", id: "pengaruh"}, {ja: "効果（こうか）", id: "efek"},
+                {ja: "方法（ほうほう）", id: "cara, metode"}, {ja: "手段（しゅだん）", id: "cara; jalan yang dipakai untuk mencapai tujuan"},
+                {ja: "仕方（しかた）", id: "cara (cara melakukan sesuatu)"}, {ja: "やり方（やりかた）", id: "cara (metode, langkah yang dipakai)"},
+                {ja: "目的（もくてき）", id: "tujuan"}, {ja: "目標（もくひょう）", id: "target; sasaran; tujuan"},
+                {ja: "計画（けいかく）", id: "rencana"}, {ja: "案（あん）", id: "ide ; rancangan yang diajukan"},
+                {ja: "過程（かてい）", id: "proses, langkah-langkah"}, {ja: "解決法（かいけつほう）", id: "cara mengatasi, cara menyelesaikan"},
+                {ja: "形式（けいしき）", id: "format"}, {ja: "用事（ようじ）", id: "urusan (keperluan yang harus dikerjakan)"},
+                {ja: "用（よう）", id: "keperluan (singkat)"}, {ja: "場合（ばあい）", id: "situasi"},
+                {ja: "状態（じょうたい）", id: "situasi, keadaan"}, {ja: "様子（ようす）", id: "keadaan atau kondisi yang terlihat dari luar"},
+                {ja: "内容（ないよう）", id: "isi"}, {ja: "特徴（とくちょう）", id: "ciri khusus"},
+                {ja: "違い（ちがい）", id: "perbedaan"}, {ja: "事実（じじつ）", id: "fakta"},
+                {ja: "都合（つごう）", id: "keadaan (waktu)"}, {ja: "出来事（できごと）", id: "peristiwa"},
+                {ja: "機会（きかい）", id: "kesempatan"}, {ja: "現実（げんじつ）", id: "kenyataan; realita"}
+            ],
+            21: [
+                {ja: "感情（かんじょう）", id: "perasaan"}, {ja: "印象（いんしょう）", id: "kesan"},
+                {ja: "表情（ひょうじょう）", id: "ekspresi wajah"}, {ja: "笑顔（えがお）", id: "senyum"},
+                {ja: "態度（たいど）", id: "sikap"}, {ja: "性格（せいかく）", id: "kepribadian; sifat"},
+                {ja: "喜び（よろこび）", id: "kegembiraan"}, {ja: "悲しみ（かなしみ）", id: "kesedihan"},
+                {ja: "怒り（いかり）", id: "kemarahan, amarah"}, {ja: "驚き（おどろき）", id: "kaget, mengagetkan"},
+                {ja: "勇気（ゆうき）", id: "keberanian"}, {ja: "不満（ふまん）", id: "ketidakpuasan"},
+                {ja: "感動（かんどう）", id: "terharu; tersentuh hati (oleh karya, cerita, atau perbuatan)"}, {ja: "後悔（こうかい）", id: "penyesalan; menyesal"},
+                {ja: "反省（はんせい）", id: "introspeksi diri; belajar dari kesalahan"}, {ja: "想像（そうぞう）", id: "imajinasi, membayangkan"},
+                {ja: "興奮（こうふん）", id: "bersemangat meluap-luap; heboh; tegang"}, {ja: "がっかり", id: "kecewa"},
+                {ja: "いらいら", id: "kesal ; jengkel karena sesuatu tidak berjalan seperti yang diharapkan"}, {ja: "文句（もんく）", id: "keluhan; komplain"},
+                {ja: "関心（かんしん）", id: "minat; ketertarikan (pada suatu hal atau masalah)"}, {ja: "積極的（せっきょくてき）", id: "bersifat aktif, agresif"},
+                {ja: "消極的（しょうきょくてき）", id: "bersifat pasif"}, {ja: "わがまま", id: "egois, banyak maunya"},
+                {ja: "意地悪（いじわる）", id: "jahil, agak jahat"}, {ja: "けち", id: "pelit, kikir"},
+                {ja: "不安（ふあん）", id: "khawatir, cemas"}, {ja: "平気（へいき）", id: "baik-baik saja"},
+                {ja: "幸せ（しあわせ）", id: "bahagia"}, {ja: "夢中（むちゅう）", id: "asyik sampai tidak menghiraukan hal lain"}
+            ],
+            22: [
+                {ja: "思い出します（おもいだします）", id: "mengingat kembali"}, {ja: "申請（しんせい）", id: "pengajuan (permohonan resmi); mengajukan permohonan"},
+                {ja: "記録（きろく）", id: "catatan"}, {ja: "距離（きょり）", id: "jarak"},
+                {ja: "移動（いどう）", id: "perpindahan; berpindah"}, {ja: "結びます（むすびます）", id: "mengikat"},
+                {ja: "確実（かくじつ）", id: "pasti"}, {ja: "正確（せいかく）", id: "tepat, akurat"},
+                {ja: "修理（しゅうり）", id: "perbaikan ; memperbaiki yang rusak"}, {ja: "詳しい（くわしい）", id: "tahu secara detail"},
+                {ja: "事務所（じむしょ）", id: "ruang kantor"}, {ja: "役所（やくしょ）", id: "kantor pemerintahan (kota, desa)"},
+                {ja: "課長（かちょう）", id: "kepala seksi"}, {ja: "資料（しりょう）", id: "dokumen (data, bahan)"},
+                {ja: "変更（へんこう）", id: "perubahan yang disengaja (mengubah rencana, jadwal)"}, {ja: "提案（ていあん）", id: "usul, saran"},
+                {ja: "返信（へんしん）", id: "jawaban, balasan (elektronik)"}, {ja: "解決（かいけつ）", id: "penyelesaian (masalah)"},
+                {ja: "苦情（くじょう）", id: "keluhan; komplain"}, {ja: "本社（ほんしゃ）", id: "kantor pusat"},
+                {ja: "助言（じょげん）", id: "nasihat; saran"}, {ja: "発言（はつげん）", id: "ucapan ; angkat bicara"},
+                {ja: "面談（めんだん）", id: "pertemuan tatap muka; wawancara"}, {ja: "現場（げんば）", id: "lokasi kejadian; lapangan (tempat kerja langsung)"},
+                {ja: "分野（ぶんや）", id: "bidang"}, {ja: "手続き（てつづき）", id: "pengurusan administrasi"}
+            ],
+            23: [
+                {ja: "交通事故（こうつうじこ）", id: "kecelakaan lalu lintas"}, {ja: "事件（じけん）", id: "kasus"},
+                {ja: "故障（こしょう）", id: "kerusakan"}, {ja: "停電（ていでん）", id: "mati listrik, listrik padam"},
+                {ja: "渋滞（じゅうたい）", id: "macet"}, {ja: "衝突（しょうとつ）", id: "tabrakan, benturan"},
+                {ja: "被害（ひがい）", id: "kerusakan, kerugian"}, {ja: "災害（さいがい）", id: "bencana (alam maupun karena ulah manusia)"},
+                {ja: "騒ぎ（さわぎ）", id: "kehebohan"}, {ja: "忘れ物（わすれもの）", id: "kelupaan membawa sesuatu"},
+                {ja: "救急車（きゅうきゅうしゃ）", id: "ambulans"}, {ja: "警察（けいさつ）", id: "polisi (institusi, kepolisian)"},
+                {ja: "骨折（こっせつ）", id: "patah tulang"}, {ja: "慌てます（あわてます）", id: "panik, tergesa-gesa"},
+                {ja: "逃げます（にげます）", id: "melarikan diri"}, {ja: "転びます（ころびます）", id: "jatuh (manusia, dari sepeda, dll)"},
+                {ja: "潰れます（つぶれます）", id: "penyet (hancur karena ditekan); bangkrut (usaha)"}, {ja: "崩れます（くずれます）", id: "runtuh, hancur"},
+                {ja: "助かります（たすかります）", id: "tertolong"}, {ja: "助けます（たすけます）", id: "menolong"},
+                {ja: "救います（すくいます）", id: "menyelamatkan"}, {ja: "防ぎます（ふせぎます）", id: "mencegah"},
+                {ja: "困ります（こまります）", id: "merasa kesulitan ; kerepotan"}, {ja: "騙します（だまします）", id: "menipu"},
+                {ja: "ぶつけます", id: "menabrak"}, {ja: "倒します（たおします）", id: "merobohkan, menumbangkan"},
+                {ja: "捕まえます（つかまえます）", id: "menangkap"}, {ja: "突然（とつぜん）", id: "tiba-tiba"},
+                {ja: "うっかり", id: "secara tidak sengaja (ceroboh)"}
+            ],
+            24: [
+                {ja: "栄養（えいよう）", id: "nutrisi"}, {ja: "睡眠（すいみん）", id: "tidur (kata benda)"},
+                {ja: "体力（たいりょく）", id: "kekuatan badan"}, {ja: "命（いのち）", id: "nyawa, kehidupan"},
+                {ja: "息（いき）", id: "nafas"}, {ja: "調子（ちょうし）", id: "kondisi (badan, mesin, apa pun)"},
+                {ja: "痛み（いたみ）", id: "rasa sakit"}, {ja: "血液（けつえき）", id: "darah"},
+                {ja: "筋肉（きんにく）", id: "otot"}, {ja: "心臓（しんぞう）", id: "jantung"},
+                {ja: "胃（い）", id: "lambung"}, {ja: "肺（はい）", id: "paru-paru"},
+                {ja: "体重（たいじゅう）", id: "berat badan"}, {ja: "身長（しんちょう）", id: "tinggi badan"},
+                {ja: "体温計（たいおんけい）", id: "termometer"}, {ja: "目薬（めぐすり）", id: "obat mata"},
+                {ja: "花粉症（かふんしょう）", id: "alergi serbuk sari (bersin, hidung meler, mata gatal)"}, {ja: "めまい", id: "pusing"},
+                {ja: "腰痛（ようつう）", id: "sakit pinggang"}, {ja: "虫歯（むしば）", id: "gigi berlubang"},
+                {ja: "傷（きず）", id: "luka gores"}, {ja: "車酔い（くるまよい）", id: "mabuk (naik mobil)"},
+                {ja: "外科（げか）", id: "bagian bedah; ilmu bedah"}, {ja: "手術（しゅじゅつ）", id: "operasi"},
+                {ja: "運動（うんどう）", id: "berolahraga"}, {ja: "眠ります（ねむります）", id: "tidur terlelap"},
+                {ja: "痩せます（やせます）", id: "menjadi kurus"}, {ja: "治します（なおします）", id: "menyembuhkan"},
+                {ja: "効きます（ききます）", id: "manjur; terasa efeknya"}
+            ],
+            25: [
+                {ja: "新聞（しんぶん）", id: "koran"}, {ja: "雑誌（ざっし）", id: "majalah"},
+                {ja: "記事（きじ）", id: "artikel"}, {ja: "情報（じょうほう）", id: "informasi"},
+                {ja: "知らせ（しらせ）", id: "pemberitahuan"}, {ja: "放送（ほうそう）", id: "siaran; pengumuman lewat pengeras suara"},
+                {ja: "広告（こうこく）", id: "iklan"}, {ja: "宣伝（せんでん）", id: "iklan; promosi"},
+                {ja: "社会（しゃかい）", id: "kehidupan sosial; masyarakat sosial"}, {ja: "政治（せいじ）", id: "politik"},
+                {ja: "政府（せいふ）", id: "pemerintah"}, {ja: "法律（ほうりつ）", id: "hukum"},
+                {ja: "決まり（きまり）", id: "keputusan, peraturan"}, {ja: "禁止（きんし）", id: "dilarang, melarang"},
+                {ja: "国際（こくさい）", id: "internasional"}, {ja: "国内（こくない）", id: "dalam negeri"},
+                {ja: "国籍（こくせき）", id: "kewarganegaraan"}, {ja: "平和（へいわ）", id: "perdamaian, damai"},
+                {ja: "公共（こうきょう）", id: "publik"}, {ja: "環境（かんきょう）", id: "lingkungan"},
+                {ja: "公害（こうがい）", id: "polusi; gangguan terhadap ketenteraman publik"}, {ja: "経済（けいざい）", id: "ekonomi"},
+                {ja: "技術（ぎじゅつ）", id: "teknik ; keterampilan ; teknologi"}, {ja: "資源（しげん）", id: "sumber daya"},
+                {ja: "参加（さんか）", id: "ikut serta; mengikuti"}, {ja: "応援（おうえん）", id: "dukungan, support"},
+                {ja: "競争（きょうそう）", id: "lomba"}, {ja: "常識（じょうしき）", id: "pengetahuan umum"},
+                {ja: "礼儀（れいぎ）", id: "tata krama; sopan santun"}
+            ],
+            26: [
+                {ja: "切符（きっぷ）", id: "karcis; tiket"}, {ja: "定期券（ていきけん）", id: "tiket langganan (kereta, bus)"},
+                {ja: "乗車券（じょうしゃけん）", id: "tiket naik kendaraan"}, {ja: "入場券（にゅうじょうけん）", id: "tiket masuk"},
+                {ja: "指定席（していせき）", id: "kursi bernomor (harus dipesan dulu)"}, {ja: "自由席（じゆうせき）", id: "kursi bebas (tanpa nomor, tidak perlu dipesan)"},
+                {ja: "片道（かたみち）", id: "perjalanan satu arah"}, {ja: "改札（かいさつ）", id: "gerbang tiket stasiun"},
+                {ja: "線路（せんろ）", id: "rel kereta"}, {ja: "信号（しんごう）", id: "lampu lalu lintas"},
+                {ja: "通路（つうろ）", id: "jalur (biasanya sempit)"}, {ja: "時刻表（じこくひょう）", id: "tabel jadwal"},
+                {ja: "新幹線（しんかんせん）", id: "shinkansen"}, {ja: "急行（きゅうこう）", id: "kereta cepat"},
+                {ja: "航空券（こうくうけん）", id: "tiket pesawat"}, {ja: "航空会社（こうくうがいしゃ）", id: "maskapai penerbangan"},
+                {ja: "混雑（こんざつ）", id: "keramaian ; kepadatan"}, {ja: "横断（おうだん）", id: "menyeberang (jalan)"},
+                {ja: "駐車（ちゅうしゃ）", id: "parkir"}, {ja: "駐車禁止（ちゅうしゃきんし）", id: "dilarang parkir"},
+                {ja: "観光（かんこう）", id: "pariwisata"}, {ja: "旅行（りょこう）", id: "jalan-jalan"},
+                {ja: "滞在（たいざい）", id: "tinggal sementara"}, {ja: "帰省（きせい）", id: "pulang ke daerah asal"},
+                {ja: "帰国（きこく）", id: "pulang ke negara asal"}, {ja: "案内（あんない）", id: "panduan"},
+                {ja: "用意（ようい）", id: "persiapan"}, {ja: "坂（さか）", id: "tanjakan, lereng"},
+                {ja: "上り坂（のぼりざか）", id: "tanjakan"}, {ja: "船（ふね）", id: "kapal laut"},
+                {ja: "隣（となり）", id: "sebelah, samping"}
+            ],
+            27: [
+                {ja: "本人（ほんにん）", id: "orang itu sendiri, orang tersebut"}, {ja: "他人（たにん）", id: "orang lain"},
+                {ja: "個人（こじん）", id: "individu"}, {ja: "相手（あいて）", id: "lawan ; partner"},
+                {ja: "知り合い（しりあい）", id: "kenalan"}, {ja: "高齢（こうれい）", id: "lanjut usia"},
+                {ja: "年上（としうえ）", id: "lebih tua"}, {ja: "年下（としした）", id: "lebih muda"},
+                {ja: "成人（せいじん）", id: "dewasa"}, {ja: "赤ん坊（あかんぼう）", id: "bayi"},
+                {ja: "皆様（みなさま）", id: "semuanya, semua orang"}, {ja: "お客様（おきゃくさま）", id: "tamu, pelanggan"},
+                {ja: "奥様（おくさま）", id: "istri (orang lain)"}, {ja: "ご主人（ごしゅじん）", id: "suami (orang lain)"},
+                {ja: "お子さん（おこさん）", id: "anak"}, {ja: "夫婦（ふうふ）", id: "suami istri"},
+                {ja: "家庭（かてい）", id: "rumah tangga"}, {ja: "知人（ちじん）", id: "kenalan"},
+                {ja: "人々（ひとびと）", id: "orang-orang"}, {ja: "男女（だんじょ）", id: "laki-laki dan perempuan"},
+                {ja: "出身（しゅっしん）", id: "asal, kelahiran, lulusan"}, {ja: "独身（どくしん）", id: "lajang, belum menikah"},
+                {ja: "代表（だいひょう）", id: "perwakilan"}, {ja: "専門家（せんもんか）", id: "ahli"},
+                {ja: "市民（しみん）", id: "penduduk kota"}, {ja: "観客（かんきゃく）", id: "penonton"},
+                {ja: "作者（さくしゃ）", id: "pengarang, penulis"}, {ja: "俳優（はいゆう）", id: "aktor"},
+                {ja: "犯人（はんにん）", id: "pelaku kejahatan"}
+            ],
+            28: [
+                {ja: "普段（ふだん）", id: "biasanya"}, {ja: "普通（ふつう）", id: "biasa, normal"},
+                {ja: "日常（にちじょう）", id: "sehari-hari"}, {ja: "結局（けっきょく）", id: "pada akhirnya"},
+                {ja: "相変わらず（あいかわらず）", id: "seperti biasa, tidak berubah"}, {ja: "案外（あんがい）", id: "di luar dugaan, tidak sesuai ekspektasi"},
+                {ja: "直接（ちょくせつ）", id: "langsung; tanpa lewat perantara"}, {ja: "いつの間にか（いつのまにか）", id: "tanpa disadari"},
+                {ja: "つまり", id: "dengan kata lain"}, {ja: "まるで", id: "bagaikan; sama sekali (berbeda)"},
+                {ja: "のんびり", id: "santai"}, {ja: "当然（とうぜん）", id: "tentu saja, sudah jelas"},
+                {ja: "同時に（どうじに）", id: "pada saat yang sama"}, {ja: "常に（つねに）", id: "selalu"},
+                {ja: "思わず（おもわず）", id: "tanpa sadar ; refleks ; tanpa disengaja"}, {ja: "つい", id: "refleks melakukan ~ padahal tidak berniat"},
+                {ja: "ついに", id: "akhirnya"}, {ja: "まさか", id: "jangan-jangan, tidak mungkin"},
+                {ja: "実は（じつは）", id: "sebenarnya"}, {ja: "実際（じっさい）", id: "sebenarnya, pada kenyataannya"},
+                {ja: "全て（すべて）", id: "semua"}, {ja: "前もって（まえもって）", id: "sebelumnya; jauh-jauh hari"},
+                {ja: "どうしても", id: "bagaimanapun"}, {ja: "ますます", id: "semakin"},
+                {ja: "習慣（しゅうかん）", id: "kebiasaan"}, {ja: "条件（じょうけん）", id: "syarat"},
+                {ja: "種類（しゅるい）", id: "jenis ; macam"}, {ja: "基本（きほん）", id: "dasar; basic; prinsip pokok"},
+                {ja: "間違い（まちがい）", id: "salah"}
+            ],
+            29: [
+                {ja: "販売（はんばい）", id: "penjualan"}, {ja: "消費（しょうひ）", id: "konsumsi"},
+                {ja: "輸出（ゆしゅつ）", id: "ekspor"}, {ja: "輸入（ゆにゅう）", id: "mengimpor"},
+                {ja: "生産（せいさん）", id: "produksi ; manufaktur"}, {ja: "倒産（とうさん）", id: "bangkrut"},
+                {ja: "注文（ちゅうもん）", id: "memesan"}, {ja: "不足（ふそく）", id: "kekurangan"},
+                {ja: "節約（せつやく）", id: "hemat"}, {ja: "貯金（ちょきん）", id: "menabung"},
+                {ja: "値上がり（ねあがり）", id: "kenaikan harga"}, {ja: "配達（はいたつ）", id: "pengiriman barang ke alamat"},
+                {ja: "追加（ついか）", id: "penambahan; menambahkan"}, {ja: "両替（りょうがえ）", id: "penukaran uang"},
+                {ja: "損（そん）", id: "kerugian"}, {ja: "価格（かかく）", id: "harga barang"},
+                {ja: "費用（ひよう）", id: "biaya"}, {ja: "物価（ぶっか）", id: "harga barang secara general pada suatu wilayah"},
+                {ja: "製品（せいひん）", id: "produk ; barang jadi"}, {ja: "消費税（しょうひぜい）", id: "pajak konsumsi"},
+                {ja: "預金（よきん）", id: "simpanan di bank; tabungan"}, {ja: "売り切れます（うりきれます）", id: "habis terjual"},
+                {ja: "売れます（うれます）", id: "terjual"}, {ja: "経営（けいえい）", id: "menjalankan bisnis; mengelola bisnis"},
+                {ja: "商売（しょうばい）", id: "perdagangan"}, {ja: "空きます（すきます）", id: "sepi, lapar"},
+                {ja: "静か（しずか）", id: "sunyi, tenang"}, {ja: "医師（いし）", id: "dokter (profesi)"},
+                {ja: "年齢（ねんれい）", id: "usia"}, {ja: "豊富（ほうふ）", id: "berlimpah ; kaya (akan)"},
+                {ja: "丸い（まるい）", id: "bulat"}, {ja: "形（かたち）", id: "bentuk; cara (susunan)"},
+                {ja: "途中（とちゅう）", id: "di tengah perjalanan"}, {ja: "触ります（さわります）", id: "memegang, menyentuh"},
+                {ja: "差します（さします）", id: "membuka payung"}
+            ],
+            30: [
+                {ja: "亡くなります（なくなります）", id: "meninggal"}, {ja: "失います（うしないます）", id: "kehilangan (bisa barang, bisa orang)"},
+                {ja: "無くなります（なくなります）", id: "hilang, habis"}, {ja: "負けます（まけます）", id: "kalah"},
+                {ja: "亡くします（なくします）", id: "kehilangan (meninggal)"}, {ja: "消えます（きえます）", id: "menghilang"},
+                {ja: "弱まります（よわまります）", id: "menjadi lemah"}, {ja: "枯れます（かれます）", id: "layu; mati (tanaman)"},
+                {ja: "腐ります（くさります）", id: "membusuk; menjadi busuk"}, {ja: "遅れます（おくれます）", id: "terlambat"},
+                {ja: "無くします（なくします）", id: "menghilangkan (barang) ; meniadakan, menghapus"}, {ja: "諦めます（あきらめます）", id: "menyerah"},
+                {ja: "弱めます（よわめます）", id: "melemahkan"}, {ja: "沈みます（しずみます）", id: "tenggelam (karena berat) ; terbenam (matahari)"},
+                {ja: "死にます（しにます）", id: "mati, meninggal"}, {ja: "飽きます（あきます）", id: "menjadi bosan terhadap sesuatu"},
+                {ja: "苦しめます（くるしめます）", id: "menyakiti, membuat orang menderita"}, {ja: "溺れます（おぼれます）", id: "tenggelam (karena tidak bisa berenang)"},
+                {ja: "汚れます（よごれます）", id: "menjadi kotor"}, {ja: "腫れます（はれます）", id: "bengkak"},
+                {ja: "隠れます（かくれます）", id: "bersembunyi"}, {ja: "勝ちます（かちます）", id: "menang"},
+                {ja: "無理をします（むりをします）", id: "memaksakan diri"}, {ja: "間違えます（まちがえます）", id: "melakukan kesalahan"},
+                {ja: "心配をかけます（しんぱいをかけます）", id: "membuat khawatir"}, {ja: "試合（しあい）", id: "pertandingan"},
+                {ja: "止まります（とまります）", id: "berhenti"}, {ja: "降ります（ふります）", id: "turun (hujan, salju)"},
+                {ja: "中止（ちゅうし）", id: "batal (acara)"}, {ja: "美味しい（おいしい）", id: "enak (netral, sopan)"}
+            ],
+            31: [
+                {ja: "お願い（おねがい）", id: "meminta tolong"}, {ja: "頼み（たのみ）", id: "permintaan tolong"},
+                {ja: "手伝い（てつだい）", id: "bantuan"}, {ja: "迎え（むかえ）", id: "jemputan"},
+                {ja: "急ぎ（いそぎ）", id: "mendesak, terburu-buru"}, {ja: "注意（ちゅうい）", id: "memperingatkan (teguran, nasihat)"},
+                {ja: "注意点（ちゅういてん）", id: "poin penting"}, {ja: "合図（あいず）", id: "isyarat; tanda"},
+                {ja: "アナウンス", id: "pengumuman"}, {ja: "マナー", id: "tata krama; sopan santun"},
+                {ja: "お礼（おれい）", id: "ucapan terima kasih"}, {ja: "邪魔（じゃま）", id: "gangguan, menghalangi"},
+                {ja: "誤解（ごかい）", id: "salah paham"}, {ja: "言い訳（いいわけ）", id: "alasan (dalih, pembelaan diri)"},
+                {ja: "いたずら", id: "kejahilan, prank"}, {ja: "自慢（じまん）", id: "pamer, bangga"},
+                {ja: "気を付けます（きをつけます）", id: "berhati-hati, waspada"}, {ja: "謝ります（あやまります）", id: "meminta maaf"},
+                {ja: "薦めます（すすめます）", id: "menyarankan"}, {ja: "褒めます（ほめます）", id: "memuji"},
+                {ja: "呼びます（よびます）", id: "memanggil"}, {ja: "尋ねます（たずねます）", id: "bertanya"},
+                {ja: "許します（ゆるします）", id: "memaafkan; mengizinkan"}, {ja: "叱ります（しかります）", id: "memarahi (dengan cara menegur/menceramahi)"},
+                {ja: "騒ぎます（さわぎます）", id: "membuat keributan, berisik"}, {ja: "禁煙（きんえん）", id: "dilarang merokok"},
+                {ja: "教えます（おしえます）", id: "mengajarkan, memberi tahu"}
+            ],
+            32: [
+                {ja: "受験（じゅけん）", id: "mengikuti ujian"}, {ja: "進学（しんがく）", id: "lanjut ke jenjang pendidikan selanjutnya"},
+                {ja: "学習（がくしゅう）", id: "pembelajaran"}, {ja: "見学（けんがく）", id: "melihat-lihat (untuk belajar)"},
+                {ja: "省略（しょうりゃく）", id: "menyingkat"}, {ja: "指定（してい）", id: "menunjuk atau menentukan"},
+                {ja: "観察（かんさつ）", id: "pengamatan; observasi"}, {ja: "実験（じっけん）", id: "eksperimen"},
+                {ja: "解答（かいとう）", id: "jawaban soal yang punya kunci (matematika, ujian)"}, {ja: "延期（えんき）", id: "penundaan; mengundur (jadwal ke waktu lain)"},
+                {ja: "研究（けんきゅう）", id: "meneliti"}, {ja: "教授（きょうじゅ）", id: "dosen, profesor"},
+                {ja: "証明（しょうめい）", id: "bukti; membuktikan"}, {ja: "完了（かんりょう）", id: "selesai sepenuhnya; tuntas"},
+                {ja: "通学（つうがく）", id: "perjalanan ke sekolah, berangkat sekolah"}, {ja: "徹夜（てつや）", id: "begadang, tidak tidur sepanjang malam"},
+                {ja: "修正（しゅうせい）", id: "revisi"}, {ja: "研修（けんしゅう）", id: "pelatihan"},
+                {ja: "計算（けいさん）", id: "perhitungan"}, {ja: "平均（へいきん）", id: "rata-rata"},
+                {ja: "理解（りかい）", id: "memahami"}, {ja: "専攻（せんこう）", id: "mengambil jurusan"},
+                {ja: "課題（かだい）", id: "tugas (dari guru atau atasan); masalah yang harus diselesaikan"}, {ja: "算数（さんすう）", id: "matematika"},
+                {ja: "化学（かがく）", id: "kimia"}, {ja: "辞典（じてん）", id: "kamus"},
+                {ja: "勉強法（べんきょうほう）", id: "cara belajar"}, {ja: "駄目（だめ）", id: "tidak boleh"}
+            ],
+            33: [
+                {ja: "芸術（げいじゅつ）", id: "seni"}, {ja: "作品（さくひん）", id: "karya"},
+                {ja: "楽器（がっき）", id: "alat musik"}, {ja: "野球（やきゅう）", id: "baseball"},
+                {ja: "柔道（じゅうどう）", id: "judo (bela diri)"}, {ja: "サッカー部（サッカーぶ）", id: "klub sepak bola (ekstrakurikuler)"},
+                {ja: "趣味（しゅみ）", id: "hobi"}, {ja: "遊び（あそび）", id: "permainan"},
+                {ja: "絵（え）", id: "gambar; lukisan"}, {ja: "曲（きょく）", id: "lagu"},
+                {ja: "踊り（おどり）", id: "tarian"}, {ja: "音楽（おんがく）", id: "musik"},
+                {ja: "映画（えいが）", id: "film"}, {ja: "小説（しょうせつ）", id: "novel"},
+                {ja: "ホラー", id: "horor"}, {ja: "ストーリー", id: "cerita"},
+                {ja: "タイトル", id: "judul"}, {ja: "ユーモア", id: "humor"},
+                {ja: "番組（ばんぐみ）", id: "acara TV"}, {ja: "ヒット", id: "kena, booming"},
+                {ja: "ポスター", id: "poster"}, {ja: "祭り（まつり）", id: "festival"},
+                {ja: "くじ", id: "undian"}, {ja: "コンテスト", id: "kontes"},
+                {ja: "賞（しょう）", id: "penghargaan; hadiah"}, {ja: "賞品（しょうひん）", id: "barang hadiah"},
+                {ja: "勝ち（かち）", id: "kemenangan"}, {ja: "負け（まけ）", id: "kekalahan"},
+                {ja: "トレーニング", id: "training, latihan"}
+            ],
+            34: [
+                {ja: "希望（きぼう）", id: "harapan"}, {ja: "予想（よそう）", id: "perkiraan"},
+                {ja: "挑戦（ちょうせん）", id: "mencoba tantangan"}, {ja: "実現（じつげん）", id: "terwujud; mewujudkan"},
+                {ja: "失敗（しっぱい）", id: "kegagalan"}, {ja: "熱中（ねっちゅう）", id: "terobsesi"},
+                {ja: "注目（ちゅうもく）", id: "perhatian"}, {ja: "感心（かんしん）", id: "kagum, terkesan"},
+                {ja: "記憶（きおく）", id: "ingatan"}, {ja: "表現（ひょうげん）", id: "ungkapan; ekspresi (mengungkapkan perasaan atau pikiran)"},
+                {ja: "実感（じっかん）", id: "rasa nyata; kesadaran bahwa sesuatu benar-benar terjadi"}, {ja: "退屈（たいくつ）", id: "membosankan"},
+                {ja: "強調（きょうちょう）", id: "menekankan"}, {ja: "否定（ひてい）", id: "menyangkal"},
+                {ja: "びっくり", id: "kaget"}, {ja: "やる気（やるき）", id: "keinginan melakukan sesuatu, motivasi"},
+                {ja: "思い出（おもいで）", id: "kenangan"}, {ja: "感想（かんそう）", id: "kesan; apa yang dirasakan setelah mengalami sesuatu"},
+                {ja: "楽しみ（たのしみ）", id: "hal yang dinantikan, excited"}, {ja: "イメージ", id: "bayangan, imej"},
+                {ja: "ショック", id: "shock, kaget"}, {ja: "完成（かんせい）", id: "selesai (dibuat); rampung"},
+                {ja: "発明（はつめい）", id: "penemuan (menciptakan sesuatu melalui penelitian)"}, {ja: "発見（はっけん）", id: "penemuan"},
+                {ja: "実行（じっこう）", id: "melaksanakan rencana"}, {ja: "実力（じつりょく）", id: "kemampuan nyata, kemampuan asli"},
+                {ja: "価値（かち）", id: "nilai"}, {ja: "成長（せいちょう）", id: "pertumbuhan ; perkembangan"}
+            ],
+            35: [
+                {ja: "優勝（ゆうしょう）", id: "menang, juara utama"}, {ja: "出場（しゅつじょう）", id: "ikut bertanding; tampil (di pertandingan atau acara)"},
+                {ja: "活躍（かつやく）", id: "berperan aktif ; berkiprah (dengan menonjol)"}, {ja: "拍手（はくしゅ）", id: "tepuk tangan"},
+                {ja: "一位（いちい）", id: "peringkat pertama; juara satu"}, {ja: "最高（さいこう）", id: "tertinggi, terbaik"},
+                {ja: "最低（さいてい）", id: "terendah; paling buruk; paling tidak (sebagai batas bawah)"}, {ja: "世界一（せかいいち）", id: "nomor satu di dunia, paling"},
+                {ja: "トップ", id: "top, paling atas"}, {ja: "スピード", id: "kecepatan"},
+                {ja: "レベル", id: "level, tingkat"}, {ja: "限界（げんかい）", id: "batas"},
+                {ja: "差（さ）", id: "selisih; perbedaan"}, {ja: "上級（じょうきゅう）", id: "tingkat lanjut, tingkat atas"},
+                {ja: "初級（しょきゅう）", id: "tingkat pemula; tingkat dasar (kursus, ujian)"}, {ja: "戦います（たたかいます）", id: "bertarung"},
+                {ja: "越えます（こえます）", id: "melampaui"}, {ja: "追います（おいます）", id: "mengejar; mengikuti (jejak, perkembangan)"},
+                {ja: "慣れます（なれます）", id: "terbiasa"}, {ja: "苦しみます（くるしみます）", id: "merasa kesakitan (bisa fisik atau mental)"},
+                {ja: "輝きます（かがやきます）", id: "bersinar; bercahaya"}, {ja: "悔しい（くやしい）", id: "kesal dan kecewa"},
+                {ja: "苦しい（くるしい）", id: "menyakitkan, sesak"}, {ja: "激しい（はげしい）", id: "intens"},
+                {ja: "我慢強い（がまんづよい）", id: "kuat menahan diri, sabar"}, {ja: "困難（こんなん）", id: "kesulitan"},
+                {ja: "不可能（ふかのう）", id: "tidak mungkin, mustahil"}, {ja: "どんなに", id: "seberapa pun; betapa pun"}
+            ],
+            36: [
+                {ja: "期間（きかん）", id: "jangka waktu"}, {ja: "時期（じき）", id: "masa; periode"},
+                {ja: "学期（がっき）", id: "semester"}, {ja: "初旬（しょじゅん）", id: "awal bulan"},
+                {ja: "年末（ねんまつ）", id: "akhir tahun"}, {ja: "深夜（しんや）", id: "larut malam; tengah malam"},
+                {ja: "時刻（じこく）", id: "waktu (jam)"}, {ja: "日付（ひづけ）", id: "tanggal"},
+                {ja: "再び（ふたたび）", id: "lagi"}, {ja: "現在（げんざい）", id: "sekarang; saat ini"},
+                {ja: "支度（したく）", id: "bersiap-siap"}, {ja: "往復（おうふく）", id: "pulang pergi"},
+                {ja: "誘います（さそいます）", id: "mengajak"}, {ja: "間に合います（まにあいます）", id: "tepat waktu, tidak terlambat"},
+                {ja: "過ぎます（すぎます）", id: "lewat (waktu, tempat)"}, {ja: "延びます（のびます）", id: "pending"},
+                {ja: "待ち合わせます（まちあわせます）", id: "janjian bertemu"}, {ja: "前半（ぜんはん）", id: "babak pertama, babak awal, bagian awal"},
+                {ja: "後半（こうはん）", id: "babak kedua, babak akhir, bagian akhir"}, {ja: "遅れ（おくれ）", id: "keterlambatan"},
+                {ja: "スケジュール", id: "jadwal"}, {ja: "今すぐ（いますぐ）", id: "sekarang juga, segera"},
+                {ja: "ぎりぎり", id: "hampir saja, sedikit lagi"}, {ja: "あっという間に（あっというまに）", id: "dalam sekejap"},
+                {ja: "少なくとも（すくなくとも）", id: "setidaknya"}, {ja: "ラッシュ", id: "buru buru, sibuk, ※ ラッシュアワー（rush hour）- jam sibuk"},
+                {ja: "経ちます（たちます）", id: "berlalu, lewat (waktu)"}, {ja: "空けます（あけます）", id: "mengosongkan"}
+            ],
+            37: [
+                {ja: "アルバイト", id: "kerja paruh waktu"}, {ja: "急ぎます（いそぎます）", id: "buru-buru, bergegas"},
+                {ja: "パート", id: "part-time, kerja paruh waktu"}, {ja: "手伝います（てつだいます）", id: "membantu"},
+                {ja: "営業（えいぎょう）", id: "buka, beroperasi (toko, restoran, dll)"}, {ja: "事務（じむ）", id: "administrasi"},
+                {ja: "受けます（うけます）", id: "menerima (ujian, pelayanan, dampak)"}, {ja: "続けます（つづけます）", id: "melanjutkan"},
+                {ja: "間違います（まちがいます）", id: "salah"}, {ja: "決まります（きまります）", id: "ditentukan"},
+                {ja: "辞めます（やめます）", id: "berhenti (dari pekerjaan)"}, {ja: "関係（かんけい）", id: "hubungan"},
+                {ja: "守ります（まもります）", id: "menjaga ; melindungi ; mematuhi (aturan, janji)"}, {ja: "貿易（ぼうえき）", id: "ekspor impor, perdagangan antar negara"},
+                {ja: "活動（かつどう）", id: "aktivitas"}, {ja: "調査（ちょうさ）", id: "penyelidikan"},
+                {ja: "営業部（えいぎょうぶ）", id: "bagian penjualan, bagian sales"}, {ja: "研究室（けんきゅうしつ）", id: "ruang penelitian"},
+                {ja: "倉庫（そうこ）", id: "gudang"}, {ja: "料金（りょうきん）", id: "tarif"},
+                {ja: "出張（しゅっちょう）", id: "perjalanan dinas"}, {ja: "出勤（しゅっきん）", id: "masuk kerja; berangkat kerja"},
+                {ja: "新入社員（しんにゅうしゃいん）", id: "karyawan baru"}, {ja: "オフィス", id: "kantor"},
+                {ja: "代金（だいきん）", id: "harga ; uang pembayaran (barang/jasa)"}, {ja: "指導（しどう）", id: "bimbingan; arahan"},
+                {ja: "集中（しゅうちゅう）", id: "konsentrasi"}
+            ],
+            38: [
+                {ja: "掛かります（かかります）", id: "memerlukan (uang, waktu)"}, {ja: "楽しみます（たのしみます）", id: "menikmati"},
+                {ja: "遊びます（あそびます）", id: "bermain"}, {ja: "散歩（さんぽ）", id: "jalan-jalan"},
+                {ja: "泊まります（とまります）", id: "menginap"}, {ja: "利用（りよう）", id: "menggunakan ; penggunaan"},
+                {ja: "着きます（つきます）", id: "sampai, tiba"}, {ja: "席（せき）", id: "tempat duduk"},
+                {ja: "運転（うんてん）", id: "mengendarai"}, {ja: "引っ越します（ひっこします）", id: "pindah rumah"},
+                {ja: "晴れます（はれます）", id: "menjadi cerah"}, {ja: "混みます（こみます）", id: "macet, ramai, penuh"},
+                {ja: "撮ります（とります）", id: "mengambil foto, video"}, {ja: "飛行機（ひこうき）", id: "pesawat"},
+                {ja: "登ります（のぼります）", id: "mendaki"}, {ja: "通います（かよいます）", id: "pulang pergi (rutin, cth : kerja, sekolah, les)"},
+                {ja: "過ごします（すごします）", id: "menghabiskan waktu, melewati waktu"}, {ja: "連れます（つれます）", id: "mengajak pergi, mengantar"},
+                {ja: "寄ります（よります）", id: "mampir"}, {ja: "先日（せんじつ）", id: "beberapa hari yang lalu"},
+                {ja: "建物（たてもの）", id: "bangunan"}, {ja: "売り場（うりば）", id: "tempat penjualan"},
+                {ja: "向かいます（むかいます）", id: "menuju, menghadap"}, {ja: "迎えます（むかえます）", id: "menjemput, menyambut"},
+                {ja: "交通（こうつう）", id: "lalu lintas"}, {ja: "海外（かいがい）", id: "luar negeri"},
+                {ja: "旅行中（りょこうちゅう）", id: "saat sedang jalan jalan"}
+            ],
+            39: [
+                {ja: "驚きます（おどろきます）", id: "terkejut ; heran"}, {ja: "喜びます（よろこびます）", id: "bahagia"},
+                {ja: "感じます（かんじます）", id: "merasakan"}, {ja: "笑います（わらいます）", id: "tertawa, tersenyum"},
+                {ja: "怒ります（おこります）", id: "marah"}, {ja: "悩みます（なやみます）", id: "bingung memikirkan sesuatu yang sulit diputuskan"},
+                {ja: "落ち着きます（おちつきます）", id: "menjadi tenang"}, {ja: "気に入ります（きにいります）", id: "suka; berkenan (di hati)"},
+                {ja: "面白い（おもしろい）", id: "menarik, lucu"}, {ja: "凄い（すごい）", id: "hebat"},
+                {ja: "つまらない", id: "tidak menarik, membosankan"}, {ja: "おかしい", id: "aneh (lucu, janggal)"},
+                {ja: "大人しい（おとなしい）", id: "pendiam (dalam artian positif)"}, {ja: "親しい（したしい）", id: "akrab, ramah"},
+                {ja: "素晴らしい（すばらしい）", id: "luar biasa"}, {ja: "ひどい", id: "jahat"},
+                {ja: "かっこいい", id: "keren"}, {ja: "楽（らく）", id: "enteng, mudah"},
+                {ja: "立派（りっぱ）", id: "hebat; luar biasa"}, {ja: "もったいない", id: "sayang untuk disia-siakan"},
+                {ja: "羨ましい（うらやましい）", id: "iri hati"}, {ja: "大好き（だいすき）", id: "sangat suka"},
+                {ja: "意外（いがい）", id: "di luar dugaan"}, {ja: "不思議（ふしぎ）", id: "aneh; ajaib (tidak bisa dijelaskan)"},
+                {ja: "派手（はで）", id: "mencolok; meriah"}, {ja: "嫌（いや）", id: "tidak suka; enggan; benci"},
+                {ja: "期待（きたい）", id: "harapan, ekspektasi"}
+            ],
+            40: [
+                {ja: "量（りょう）", id: "jumlah"}, {ja: "様々（さまざま）", id: "berbagai"},
+                {ja: "両方（りょうほう）", id: "keduanya"}, {ja: "別（べつ）", id: "berbeda, yang lain"},
+                {ja: "薄い（うすい）", id: "tipis ; hambar (rasanya kurang kuat)"}, {ja: "細かい（こまかい）", id: "kecil-kecil; rinci; teliti sampai hal kecil"},
+                {ja: "浅い（あさい）", id: "dangkal"}, {ja: "部分（ぶぶん）", id: "bagian"},
+                {ja: "硬い（かたい）", id: "keras (benda padat — logam, batu)"}, {ja: "柔らかい（やわらかい）", id: "lembut, lembek"},
+                {ja: "濃い（こい）", id: "pekat"}, {ja: "厚い（あつい）", id: "tebal"},
+                {ja: "太い（ふとい）", id: "tebal"}, {ja: "全体（ぜんたい）", id: "keseluruhan"},
+                {ja: "質（しつ）", id: "kualitas"}, {ja: "区別（くべつ）", id: "membedakan ; pembedaan"},
+                {ja: "選択（せんたく）", id: "pilihan"}, {ja: "欠点（けってん）", id: "kekurangan; kelemahan"},
+                {ja: "一流（いちりゅう）", id: "kelas satu; terkemuka (di suatu bidang)"}, {ja: "見本（みほん）", id: "contoh (barang); sampel"},
+                {ja: "比較（ひかく）", id: "perbandingan; membandingkan"}, {ja: "高価（こうか）", id: "mahal (harganya tinggi)"},
+                {ja: "中古（ちゅうこ）", id: "bekas (barang bekas)"}, {ja: "実物（じつぶつ）", id: "barang aslinya ; wujud nyatanya (bukan gambar atau contoh)"},
+                {ja: "大量（たいりょう）", id: "dalam jumlah besar; banyak sekali"}, {ja: "単純（たんじゅん）", id: "sederhana; simpel"},
+                {ja: "複数（ふくすう）", id: "lebih dari satu; beberapa"}
+            ],
+            41: [
+                {ja: "習います（ならいます）", id: "belajar dari guru"}, {ja: "泳ぎます（およぎます）", id: "berenang"},
+                {ja: "歌手（かしゅ）", id: "penyanyi"}, {ja: "道具（どうぐ）", id: "alat; perkakas"},
+                {ja: "水泳（すいえい）", id: "renang"}, {ja: "踊ります（おどります）", id: "menari"},
+                {ja: "描きます（かきます）", id: "menggambar"}, {ja: "投げます（なげます）", id: "melempar"},
+                {ja: "学びます（まなびます）", id: "menuntut ilmu"}, {ja: "教わります（おそわります）", id: "diajarkan"},
+                {ja: "上手い（うまい）", id: "jago"}, {ja: "弾く（ひく）", id: "memainkan (piano, gitar, dll.)"},
+                {ja: "漫画（まんが）", id: "komik; manga"}, {ja: "大会（たいかい）", id: "turnamen; kompetisi; pertemuan besar"},
+                {ja: "工夫（くふう）", id: "mengakali ; cara yang dipikirkan supaya lebih baik"}, {ja: "仲間（なかま）", id: "teman; rekan (satu kelompok)"},
+                {ja: "読書（どくしょ）", id: "baca buku"}, {ja: "ぺらぺら", id: "lancar; fasih (bicara bahasa asing)"},
+                {ja: "折り紙（おりがみ）", id: "origami; seni melipat kertas"}, {ja: "苦労（くろう）", id: "susah payah; kesulitan (yang dijalani)"},
+                {ja: "バスケットボール", id: "bola basket"}, {ja: "訓練（くんれん）", id: "latihan; pelatihan"},
+                {ja: "進歩（しんぽ）", id: "kemajuan; perkembangan ke arah lebih baik"}, {ja: "登山（とざん）", id: "mendaki gunung"},
+                {ja: "卓球（たっきゅう）", id: "tenis meja; pingpong"}, {ja: "体操（たいそう）", id: "senam"},
+                {ja: "ハイキング", id: "hiking; jalan-jalan mendaki bukit/gunung"}
+            ]
+        };
+
+        // NAVIGASI ANTAR HALAMAN
+        function hideAllViews() {
+            document.getElementById("home-view").style.display = "none";
+            document.getElementById("bunpou-list-view").style.display = "none";
+            document.getElementById("bunpou-detail-view").style.display = "none";
+            document.getElementById("menu-view").style.display = "none";
+            document.getElementById("flashcard-view").style.display = "none";
+        }
+
+        function goHome() {
+            stopAutoPlay();
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            hideAllViews();
+            document.getElementById("home-view").style.display = "flex";
+        }
+
+        function openBunpou() {
+            hideAllViews();
+            document.getElementById("bunpou-list-view").style.display = "flex";
+        }
+
+        function backToBunpouList() {
+            hideAllViews();
+            document.getElementById("bunpou-list-view").style.display = "flex";
+        }
+
+        function openBunpouDetail(id) {
+            const item = bunpouData.find(b => b.id === id);
+            if (!item) return;
+
+            let html = `<h2>${item.title}</h2>`;
+
+            if (item.rumus) {
+                html += `
+                    <div class="bunpou-section">
+                        <div class="bunpou-section-title">Rumus</div>
+                        <div class="bunpou-text">${item.rumus}</div>
+                    </div>
+                `;
+            }
+
+            html += `
+                <div class="bunpou-section">
+                    <div class="bunpou-section-title">Penjelasan</div>
+                    <div class="bunpou-text">${item.penjelasan}</div>
+                </div>
+            `;
+
+            if (item.tips) {
+                html += `
+                    <div class="bunpou-section">
+                        <div class="bunpou-section-title">Tips</div>
+                        <div class="bunpou-text">${item.tips}</div>
+                    </div>
+                `;
+            }
+
+            if (item.examples.length > 0) {
+                html += `
+                    <div class="bunpou-section">
+                        <div class="bunpou-section-title">Contoh Kalimat</div>
+                        ${item.examples.map(ex => `
+                            <div class="bunpou-example">
+                                <p class="bunpou-jp">${ex.jp}</p>
+                                <p class="bunpou-id">${ex.id}</p>
+                            </div>
+                        `).join("")}
+                    </div>
+                `;
+            }
+
+            if (item.jlpt.length > 0) {
+                html += `
+                    <div class="bunpou-section">
+                        <div class="bunpou-section-title">Dari Soal JLPT</div>
+                        ${item.jlpt.map(j => `
+                            <div class="bunpou-example">
+                                <span class="bunpou-tag">${j.tag}</span>
+                                <p class="bunpou-jp">${j.jp}</p>
+                                <p class="bunpou-id">${j.id}</p>
+                            </div>
+                        `).join("")}
+                    </div>
+                `;
+            }
+
+            document.getElementById("bunpou-detail-content").innerHTML = html;
+            hideAllViews();
+            document.getElementById("bunpou-detail-view").style.display = "flex";
+            window.scrollTo(0, 0);
+        }
+
+        function openKotoba() {
+            hideAllViews();
+            document.getElementById("menu-view").style.display = "flex";
+        }
+
+        // RENDER DAFTAR JUDUL BUNPOU
+        const bunpouListEl = document.getElementById("bunpou-list");
+        bunpouData.forEach(item => {
+            const btn = document.createElement("button");
+            btn.className = "bunpou-title-btn";
+            btn.innerText = item.title;
+            btn.onclick = () => openBunpouDetail(item.id);
+            bunpouListEl.appendChild(btn);
+        });
+
+        // VARIABEL FLASHCARD KOTOBA
+        let currentQueue = [];
+        let reviewQueue = [];
+        let historyStack = [];
+        let currentIndex = 0;
+        let isFlipped = false;
+        let round = 1;
+        let activeDay = 1;
+        let currentAudioText = "";
+        let isTransitioning = false;
+
+        // VARIABEL AUTO PLAY
+        let isAutoPlaying = false;
+        let autoPlayTimer = null;
+
+        // BIKIN TOMBOL 70 HARI
+        const grid = document.getElementById("day-grid");
+        for (let i = 1; i <= 70; i++) {
+            const btn = document.createElement("button");
+            btn.innerText = `Day ${i}`;
+            if (kotobaData[i]) {
+                btn.className = "day-btn day-active";
+                btn.onclick = () => startSesi(i);
+            } else {
+                btn.className = "day-btn day-locked";
+                btn.title = "Belum ada data";
+            }
+            grid.appendChild(btn);
+        }
+
+        function showToast(msg) {
+            const el = document.getElementById("toast-msg");
+            el.innerText = msg;
+            if (msg) {
+                setTimeout(() => {
+                    if (el.innerText === msg) el.innerText = "";
+                }, 2500);
+            }
+        }
+
+        // FUNGSI SUARA JEPANG (TEXT TO SPEECH)
+        function speakJapanese(text, event) {
+            if (event) event.stopPropagation();
+            if (!('speechSynthesis' in window) || !text) return;
+
+            window.speechSynthesis.cancel();
+            let cleanText = text.split("※")[0].trim();
+
+            const utterance = new SpeechSynthesisUtterance(cleanText);
+            utterance.lang = 'ja-JP';
+            utterance.rate = 0.95;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function startSesi(dayNumber) {
+            stopAutoPlay();
+            activeDay = dayNumber;
+            currentQueue = [...kotobaData[dayNumber]];
+            reviewQueue = [];
+            historyStack = [];
+            currentIndex = 0;
+            round = 1;
+            isFlipped = false;
+            showToast("");
+
+            document.getElementById("flashcard").classList.remove("is-flipped");
+            document.getElementById("current-day-title").innerText = `Day ${dayNumber}`;
+            document.getElementById("menu-view").style.display = "none";
+            document.getElementById("flashcard-view").style.display = "flex";
+            document.getElementById("controls").style.display = "flex";
+            document.getElementById("autoplay-panel").style.display = "inline-flex";
+
+            renderCardContent();
+        }
+
+        function backToMenu() {
+            stopAutoPlay();
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+            document.getElementById("menu-view").style.display = "flex";
+            document.getElementById("flashcard-view").style.display = "none";
+        }
+
+        function updateCard() {
+            if (isFlipped) {
+                isTransitioning = true;
+                document.getElementById("flashcard").classList.remove("is-flipped");
+                isFlipped = false;
+
+                setTimeout(() => {
+                    renderCardContent();
+                    isTransitioning = false;
+                }, 220);
+            } else {
+                renderCardContent();
+            }
+        }
+
+        function renderCardContent() {
+            if (currentIndex >= currentQueue.length) {
+                if (reviewQueue.length > 0) {
+                    stopAutoPlay();
+                    currentQueue = [...reviewQueue];
+                    reviewQueue = [];
+                    currentIndex = 0;
+                    historyStack = [];
+                    round++;
+                    showToast("Sesi pengulangan untuk kata yang 'Belum' diingat!");
+                } else {
+                    stopAutoPlay();
+                    document.getElementById("card-front").innerText = "🎉 Selesai!";
+                    document.getElementById("card-back").innerHTML = `<div class="arti-indo">Day ${activeDay} Tuntas!</div>`;
+                    document.getElementById("status-text").innerText = "Semua kosakata berhasil dihafal!";
+                    document.getElementById("controls").style.display = "none";
+                    document.getElementById("autoplay-panel").style.display = "none";
+                    document.getElementById("flashcard").classList.remove("is-flipped");
+                    isFlipped = false;
+                    return;
+                }
+            }
+
+            let rawJa = currentQueue[currentIndex].ja;
+            let artiId = currentQueue[currentIndex].id;
+
+            let teksDepan = rawJa;
+            let teksBacaan = "";
+
+            if (rawJa.includes("（") && rawJa.includes("）")) {
+                let parts = rawJa.split("（");
+                teksDepan = parts[0].trim();
+                teksBacaan = parts[1].replace("）", "").trim();
+            } else if (rawJa.includes("(") && rawJa.includes(")")) {
+                let parts = rawJa.split("(");
+                teksDepan = parts[0].trim();
+                teksBacaan = parts[1].replace(")", "").trim();
+            }
+
+            currentAudioText = teksBacaan !== "" ? teksBacaan : teksDepan;
+
+            document.getElementById("card-front").innerText = teksDepan;
+
+            if (teksBacaan !== "") {
+                document.getElementById("card-back").innerHTML = `
+                    <div class="bacaan-wrapper">
+                        <div class="bacaan-jepang">${teksBacaan}</div>
+                        <button class="btn-speak" onclick="speakJapanese(currentAudioText, event)" title="Dengarkan suara">🔊</button>
+                    </div>
+                    <div class="arti-indo">${artiId}</div>
+                `;
+            } else {
+                document.getElementById("card-back").innerHTML = `
+                    <div class="bacaan-wrapper">
+                        <div class="arti-indo">${artiId}</div>
+                        <button class="btn-speak" onclick="speakJapanese(currentAudioText, event)" title="Dengarkan suara">🔊</button>
+                    </div>
+                `;
+            }
+
+            let statusText = `Putaran ${round} | Kata ${currentIndex + 1} dari ${currentQueue.length}`;
+            if (reviewQueue.length > 0) statusText += ` (${reviewQueue.length} ngulang)`;
+            document.getElementById("status-text").innerText = statusText;
+        }
+
+        function flipCard() {
+            if (isTransitioning) return;
+            if (currentIndex >= currentQueue.length && reviewQueue.length === 0) return;
+            isFlipped = !isFlipped;
+            document.getElementById("flashcard").classList.toggle("is-flipped", isFlipped);
+
+            if (isFlipped) {
+                speakJapanese(currentAudioText);
+            }
+        }
+
+        function manualFlip() {
+            stopAutoPlay();
+            flipCard();
+        }
+
+        function markIngat() {
+            if (isTransitioning) return;
+            stopAutoPlay();
+            if (currentIndex >= currentQueue.length) return;
+            historyStack.push({ word: currentQueue[currentIndex], status: 'ingat' });
+            currentIndex++;
+            updateCard();
+        }
+
+        function markBelum() {
+            if (isTransitioning) return;
+            stopAutoPlay();
+            if (currentIndex >= currentQueue.length) return;
+            historyStack.push({ word: currentQueue[currentIndex], status: 'belum' });
+            reviewQueue.push(currentQueue[currentIndex]);
+            currentIndex++;
+            updateCard();
+        }
+
+        function goBack() {
+            if (isTransitioning) return;
+            stopAutoPlay();
+            if (historyStack.length === 0) {
+                showToast("Ini adalah kata pertama, tidak bisa kembali.");
+                return;
+            }
+            const lastAction = historyStack.pop();
+            if (lastAction.status === 'belum') {
+                reviewQueue.pop();
+            }
+            currentIndex--;
+            updateCard();
+        }
+
+        function toggleAutoPlay() {
+            if (isAutoPlaying) {
+                stopAutoPlay();
+            } else {
+                startAutoPlay();
+            }
+        }
+
+        function startAutoPlay() {
+            if (currentIndex >= currentQueue.length) return;
+            isAutoPlaying = true;
+            const btnPlay = document.getElementById("btn-play");
+            btnPlay.innerText = "⏸ Pause";
+            btnPlay.classList.add("playing");
+            runAutoPlayStep();
+        }
+
+        function stopAutoPlay() {
+            isAutoPlaying = false;
+            clearTimeout(autoPlayTimer);
+            const btnPlay = document.getElementById("btn-play");
+            if (btnPlay) {
+                btnPlay.innerText = "▶ Play";
+                btnPlay.classList.remove("playing");
+            }
+        }
+
+        function changeSpeed() {
+            if (isAutoPlaying) {
+                clearTimeout(autoPlayTimer);
+                runAutoPlayStep();
+            }
+        }
+
+        function runAutoPlayStep() {
+            if (!isAutoPlaying) return;
+            const delay = parseInt(document.getElementById("speed-select").value);
+
+            autoPlayTimer = setTimeout(() => {
+                if (!isAutoPlaying) return;
+
+                if (!isFlipped) {
+                    flipCard();
+                    runAutoPlayStep();
+                } else {
+                    currentIndex++;
+                    if (currentIndex >= currentQueue.length) {
+                        currentIndex = 0;
+                    }
+                    updateCard();
+                    runAutoPlayStep();
+                }
+            }, delay);
+        }
+    </script>
+</body>
+</html>
