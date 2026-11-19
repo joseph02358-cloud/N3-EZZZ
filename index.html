@@ -8,6 +8,12 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; color: #333; }
         h1, h2 { color: #333; text-align: center; }
 
+        /* LOAD SCREEN */
+        #splash-screen { position: fixed; inset: 0; background-color: #2c3e50; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.45s ease; }
+        #splash-screen.fade-out { opacity: 0; pointer-events: none; }
+        .splash-title { font-size: 48px; font-weight: 800; letter-spacing: 3px; margin: 0; }
+        .splash-sub { font-size: 13px; color: #cbd5e1; margin-top: 8px; letter-spacing: 1px; }
+
         /* HOME VIEW */
         #home-view { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 600px; margin-top: 40px; }
         .home-choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; margin-top: 24px; }
@@ -24,6 +30,10 @@
         .day-active { background-color: #3498db; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .day-active:hover { background-color: #2980b9; transform: translateY(-2px); }
         .day-locked { background-color: #bdc3c7; cursor: not-allowed; }
+        .day-done { background-color: #2ecc71; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .day-done:hover { background-color: #27ae60; transform: translateY(-2px); }
+        .kotoba-progress-info { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #555; font-weight: 600; }
+        .btn-reset-progress { background-color: #95a5a6; padding: 5px 10px; font-size: 12px; border-radius: 6px; box-shadow: none; }
 
         /* FLASHCARD VIEW KOTOBA */
         #flashcard-view { display: none; flex-direction: column; align-items: center; width: 100%; }
@@ -87,6 +97,12 @@
 </head>
 <body>
 
+    <!-- LOAD SCREEN -->
+    <div id="splash-screen">
+        <div class="splash-title">N3 EZZZ</div>
+        <div class="splash-sub">by bareumsan</div>
+    </div>
+
     <!-- HALAMAN HOME -->
     <div id="home-view">
         <h1>Aplikasi Belajar Bahasa Jepang</h1>
@@ -121,6 +137,10 @@
         <button class="btn-menu" onclick="goHome()">← Kembali ke Home</button>
         <h1 style="margin: 5px 0;">Pilih Sesi Belajar</h1>
         <p style="margin-top: 5px;">Target: 70 Hari</p>
+        <div class="kotoba-progress-info">
+            <span id="kotoba-progress-text">Tuntas: 0 Hari</span>
+            <button class="btn-reset-progress" onclick="resetKotobaProgress()">Reset Progres</button>
+        </div>
         <div class="grid-container" id="day-grid"></div>
     </div>
 
@@ -1676,20 +1696,60 @@
         let isAutoPlaying = false;
         let autoPlayTimer = null;
 
-        // BIKIN TOMBOL 70 HARI
-        const grid = document.getElementById("day-grid");
-        for (let i = 1; i <= 70; i++) {
-            const btn = document.createElement("button");
-            btn.innerText = `Day ${i}`;
-            if (kotobaData[i]) {
-                btn.className = "day-btn day-active";
-                btn.onclick = () => startSesi(i);
-            } else {
-                btn.className = "day-btn day-locked";
-                btn.title = "Belum ada data";
+        // PENYIMPANAN PROGRES KOTOBA DI LOCALSTORAGE
+        const KOTOBA_STORAGE_KEY = "belajar_jepang_completed_days_v1";
+
+        function loadCompletedDays() {
+            try {
+                const raw = localStorage.getItem(KOTOBA_STORAGE_KEY);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
             }
-            grid.appendChild(btn);
         }
+
+        function saveCompletedDay(dayNumber) {
+            try {
+                const list = loadCompletedDays();
+                if (!list.includes(dayNumber)) {
+                    list.push(dayNumber);
+                    localStorage.setItem(KOTOBA_STORAGE_KEY, JSON.stringify(list));
+                }
+            } catch (e) {}
+        }
+
+        function resetKotobaProgress() {
+            try {
+                localStorage.removeItem(KOTOBA_STORAGE_KEY);
+            } catch (e) {}
+            renderDayGrid();
+        }
+
+        // BIKIN TOMBOL 70 HARI
+        function renderDayGrid() {
+            const grid = document.getElementById("day-grid");
+            const completedDays = loadCompletedDays();
+            grid.innerHTML = "";
+            for (let i = 1; i <= 70; i++) {
+                const btn = document.createElement("button");
+                if (kotobaData[i]) {
+                    const isDone = completedDays.includes(i);
+                    btn.innerText = isDone ? `Day ${i} ✔` : `Day ${i}`;
+                    btn.className = isDone ? "day-btn day-done" : "day-btn day-active";
+                    btn.onclick = () => startSesi(i);
+                } else {
+                    btn.innerText = `Day ${i}`;
+                    btn.className = "day-btn day-locked";
+                    btn.title = "Belum ada data";
+                }
+                grid.appendChild(btn);
+            }
+            const totalActive = Object.keys(kotobaData).length;
+            const doneCount = completedDays.filter(d => kotobaData[d]).length;
+            document.getElementById("kotoba-progress-text").innerText = `Tuntas: ${doneCount} / ${totalActive} Hari`;
+        }
+        renderDayGrid();
 
         function showToast(msg) {
             const el = document.getElementById("toast-msg");
@@ -1770,6 +1830,8 @@
                     showToast("Sesi pengulangan untuk kata yang 'Belum' diingat!");
                 } else {
                     stopAutoPlay();
+                    saveCompletedDay(activeDay);
+                    renderDayGrid();
                     document.getElementById("card-front").innerText = "🎉 Selesai!";
                     document.getElementById("card-back").innerHTML = `<div class="arti-indo">Day ${activeDay} Tuntas!</div>`;
                     document.getElementById("status-text").innerText = "Semua kosakata berhasil dihafal!";
@@ -1927,6 +1989,19 @@
                 }
             }, delay);
         }
+
+        // SEMBUNYIKAN LOAD SCREEN SEBELUM TAMPIL HOME
+        window.addEventListener("DOMContentLoaded", () => {
+            const splash = document.getElementById("splash-screen");
+            if (splash) {
+                setTimeout(() => {
+                    splash.classList.add("fade-out");
+                    setTimeout(() => {
+                        splash.style.display = "none";
+                    }, 450);
+                }, 1300);
+            }
+        });
     </script>
 </body>
 </html>
