@@ -2,93 +2,107 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aplikasi Belajar Bahasa Jepang</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#1B233D">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="N3 EZZZ">
+    <link rel="manifest" id="pwa-manifest">
+    <link rel="apple-touch-icon" id="apple-icon">
+    <title>N3 EZZZ — Aplikasi Belajar Bahasa Jepang</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; color: #333; }
-        h1, h2 { color: #333; text-align: center; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #E5D9C3; margin: 0; padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) max(20px, env(safe-area-inset-bottom)) max(20px, env(safe-area-inset-left)); display: flex; flex-direction: column; align-items: center; color: #1B233D; min-height: 100vh; box-sizing: border-box; }
+        h1, h2 { color: #1B233D; text-align: center; }
 
         /* LOAD SCREEN */
-        #splash-screen { position: fixed; inset: 0; background-color: #2c3e50; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.45s ease; }
+        #splash-screen { position: fixed; inset: 0; background-color: #1B233D; color: #E5D9C3; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; transition: opacity 0.45s ease; }
         #splash-screen.fade-out { opacity: 0; pointer-events: none; }
-        .splash-title { font-size: 48px; font-weight: 800; letter-spacing: 3px; margin: 0; }
-        .splash-sub { font-size: 13px; color: #cbd5e1; margin-top: 8px; letter-spacing: 1px; }
+        .splash-title { font-size: 48px; font-weight: 800; letter-spacing: 3px; margin: 0; color: #E5D9C3; }
+        .splash-sub { font-size: 13px; color: #C7BA9F; margin-top: 8px; letter-spacing: 1.5px; }
 
         /* HOME VIEW */
         #home-view { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 600px; margin-top: 40px; }
         .home-choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; width: 100%; margin-top: 24px; }
-        .home-card-btn { padding: 36px 20px; font-size: 22px; font-weight: bold; border: none; border-radius: 14px; cursor: pointer; color: white; box-shadow: 0 6px 14px rgba(0,0,0,0.1); transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .home-card-btn:hover { transform: translateY(-3px); opacity: 0.95; }
-        .home-card-sub { font-size: 13px; font-weight: normal; opacity: 0.9; }
-        .btn-home-bunpou { background-color: #2c3e50; }
-        .btn-home-kotoba { background-color: #3498db; }
+        .home-card-btn { padding: 36px 20px; font-size: 22px; font-weight: bold; border: 2px solid #1B233D; border-radius: 14px; cursor: pointer; box-shadow: 0 6px 16px rgba(27,35,61,0.12); transition: 0.2s; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .home-card-btn:hover { transform: translateY(-3px); opacity: 0.94; }
+        .home-card-sub { font-size: 13px; font-weight: normal; opacity: 0.85; }
+        .btn-home-bunpou { background-color: #1B233D; color: #E5D9C3; }
+        .btn-home-kotoba { background-color: #FAF6EE; color: #1B233D; }
 
         /* MENU UTAMA KOTOBA (DAY 1 - 70) */
         #menu-view { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 800px; }
         .grid-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; width: 100%; margin-top: 20px; }
-        .day-btn { padding: 15px 5px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-align: center; color: white; transition: 0.2s; }
-        .day-active { background-color: #3498db; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .day-active:hover { background-color: #2980b9; transform: translateY(-2px); }
-        .day-locked { background-color: #bdc3c7; cursor: not-allowed; }
-        .day-done { background-color: #2ecc71; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .day-done:hover { background-color: #27ae60; transform: translateY(-2px); }
-        .kotoba-progress-info { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #555; font-weight: 600; }
-        .btn-reset-progress { background-color: #95a5a6; padding: 5px 10px; font-size: 12px; border-radius: 6px; box-shadow: none; }
+        .day-btn { padding: 15px 5px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; text-align: center; transition: 0.2s; }
+        .day-active { background-color: #1B233D; color: #E5D9C3; box-shadow: 0 4px 8px rgba(27,35,61,0.14); }
+        .day-active:hover { background-color: #273257; transform: translateY(-2px); }
+        .day-locked { background-color: #D2C5AE; color: #7C7362; cursor: not-allowed; box-shadow: none; }
+        .day-done { background-color: #3B5E4C; color: #FAF6EE; box-shadow: 0 4px 8px rgba(27,35,61,0.12); }
+        .day-done:hover { background-color: #2F4D3E; transform: translateY(-2px); }
+        .kotoba-progress-info { display: flex; align-items: center; gap: 12px; font-size: 14px; color: #3D4663; font-weight: 600; }
+        .btn-reset-progress { background-color: #8A7F6D; color: #FAF6EE; padding: 5px 10px; font-size: 12px; border-radius: 6px; box-shadow: none; }
 
         /* FLASHCARD VIEW KOTOBA */
         #flashcard-view { display: none; flex-direction: column; align-items: center; width: 100%; }
-        .status { margin-bottom: 15px; font-size: 15px; color: #666; font-weight: bold; }
+        .status { margin-bottom: 15px; font-size: 15px; color: #3D4663; font-weight: bold; }
 
         .card-container { perspective: 1000px; width: 350px; max-width: 100%; height: 220px; margin-bottom: 16px; cursor: pointer; }
-        .card { width: 100%; height: 100%; transition: transform 0.5s; transform-style: preserve-3d; position: relative; border-radius: 15px; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        .card { width: 100%; height: 100%; transition: transform 0.5s; transform-style: preserve-3d; position: relative; border-radius: 15px; box-shadow: 0 10px 22px rgba(27,35,61,0.14); }
         .card.is-flipped { transform: rotateY(180deg); }
 
         .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; border-radius: 15px; text-align: center; padding: 20px; box-sizing: border-box; }
 
-        .card-front { background-color: white; color: #2c3e50; border: 2px solid #e0e0e0; font-size: 40px; font-weight: bold; }
-        .card-back { background-color: #4CAF50; color: white; transform: rotateY(180deg); flex-direction: column; justify-content: center; gap: 12px; position: relative; }
+        .card-front { background-color: #FAF6EE; color: #1B233D; border: 2px solid #D3C6AF; font-size: 40px; font-weight: bold; }
+        .card-back { background-color: #1B233D; color: #FAF6EE; transform: rotateY(180deg); flex-direction: column; justify-content: center; gap: 12px; position: relative; }
         .bacaan-wrapper { display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .bacaan-jepang { font-size: 30px; font-weight: bold; color: #fff59d; }
-        .arti-indo { font-size: 19px; line-height: 1.4; }
+        .bacaan-jepang { font-size: 30px; font-weight: bold; color: #E5D9C3; }
+        .arti-indo { font-size: 19px; line-height: 1.4; color: #FAF6EE; }
 
-        .btn-speak { background: rgba(255, 255, 255, 0.2); border: none; border-radius: 50%; width: 32px; height: 32px; padding: 0; font-size: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: none; color: white; }
-        .btn-speak:hover { background: rgba(255, 255, 255, 0.35); }
+        .btn-speak { background: rgba(229, 217, 195, 0.2); border: none; border-radius: 50%; width: 32px; height: 32px; padding: 0; font-size: 15px; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: none; color: #E5D9C3; }
+        .btn-speak:hover { background: rgba(229, 217, 195, 0.35); }
 
-        .autoplay-controls { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 18px; background: white; padding: 5px 10px; border-radius: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.06); border: 1px solid #e0e0e0; }
-        .btn-play { background-color: #9b59b6; padding: 5px 12px; font-size: 12px; border-radius: 14px; box-shadow: none; min-width: 72px; }
-        .btn-play.playing { background-color: #e67e22; }
-        .speed-select { padding: 3px 6px; font-size: 12px; font-weight: 600; border-radius: 12px; border: 1px solid #ddd; color: #555; background: #f9f9f9; cursor: pointer; outline: none; }
+        .autoplay-controls { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 18px; background: #FAF6EE; padding: 5px 10px; border-radius: 20px; box-shadow: 0 2px 6px rgba(27,35,61,0.08); border: 1px solid #D3C6AF; }
+        .btn-play { background-color: #1B233D; color: #E5D9C3; padding: 5px 12px; font-size: 12px; border-radius: 14px; box-shadow: none; min-width: 72px; }
+        .btn-play.playing { background-color: #8E5B3E; color: #FAF6EE; }
+        .speed-select { padding: 3px 6px; font-size: 12px; font-weight: 600; border-radius: 12px; border: 1px solid #D3C6AF; color: #1B233D; background: #F2ECE0; cursor: pointer; outline: none; }
 
         .controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 20px; }
-        button { padding: 12px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; color: white; transition: opacity 0.2s, background-color 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        button:hover { opacity: 0.9; }
+        button { padding: 12px 20px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; color: #FAF6EE; transition: opacity 0.2s, background-color 0.2s; box-shadow: 0 4px 8px rgba(27,35,61,0.12); }
+        button:hover { opacity: 0.92; }
 
-        .btn-back { background-color: #7f8c8d; }
-        .btn-belum { background-color: #e74c3c; }
-        .btn-ingat { background-color: #2ecc71; }
-        .btn-menu { background-color: #34495e; margin-bottom: 15px; padding: 8px 16px; font-size: 14px; }
+        .btn-back { background-color: #6E6A61; color: #FAF6EE; }
+        .btn-belum { background-color: #A94438; color: #FAF6EE; }
+        .btn-ingat { background-color: #3B5E4C; color: #FAF6EE; }
+        .btn-menu { background-color: #1B233D; color: #E5D9C3; margin-bottom: 15px; padding: 8px 16px; font-size: 14px; }
 
-        .toast-msg { min-height: 20px; font-size: 13px; color: #e67e22; font-weight: 600; margin-bottom: 8px; text-align: center; }
+        .toast-msg { min-height: 20px; font-size: 13px; color: #8E5B3E; font-weight: 600; margin-bottom: 8px; text-align: center; }
 
         /* BUNPOU LIST VIEW (SIMPLE) */
         #bunpou-list-view { display: none; flex-direction: column; align-items: center; width: 100%; max-width: 700px; }
         .bunpou-list { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-top: 12px; }
-        .bunpou-title-btn { width: 100%; text-align: left; background-color: white; color: #2c3e50; border: 1px solid #e0e0e0; padding: 14px 18px; border-radius: 10px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.04); cursor: pointer; transition: 0.15s; }
-        .bunpou-title-btn:hover { background-color: #f8fafc; border-color: #3498db; }
+        .bunpou-title-btn { width: 100%; text-align: left; background-color: #FAF6EE; color: #1B233D; border: 1px solid #D3C6AF; padding: 14px 18px; border-radius: 10px; font-size: 16px; font-weight: 600; box-shadow: 0 2px 6px rgba(27,35,61,0.06); cursor: pointer; transition: 0.15s; }
+        .bunpou-title-btn { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .bunpou-title-btn:hover { background-color: #F2ECE0; border-color: #1B233D; }
+        .bunpou-title-btn.is-done { background-color: #EEF4F0; border-color: #3B5E4C; }
+        .bunpou-done-badge { font-size: 12px; font-weight: bold; color: #FAF6EE; background-color: #3B5E4C; padding: 3px 10px; border-radius: 12px; shrink: 0; white-space: nowrap; }
+        .bunpou-detail-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #E2D8C5; padding-bottom: 12px; }
+        .bunpou-detail-header h2 { border-bottom: none; padding-bottom: 0; margin: 0; }
+        .btn-faham { background-color: #FAF6EE; color: #1B233D; border: 2px solid #1B233D; padding: 8px 16px; font-size: 13px; border-radius: 8px; box-shadow: none; }
+        .btn-faham.is-done { background-color: #3B5E4C; color: #FAF6EE; border-color: #3B5E4C; }
 
         /* BUNPOU DETAIL VIEW (SIMPLE) */
         #bunpou-detail-view { display: none; flex-direction: column; align-items: flex-start; width: 100%; max-width: 700px; }
-        .bunpou-card { width: 100%; background-color: white; border-radius: 12px; padding: 24px; box-sizing: border-box; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .bunpou-card h2 { text-align: left; margin-top: 0; color: #2c3e50; font-size: 24px; border-bottom: 1px solid #eee; padding-bottom: 12px; }
+        .bunpou-card { width: 100%; background-color: #FAF6EE; border-radius: 12px; padding: 24px; box-sizing: border-box; box-shadow: 0 6px 16px rgba(27,35,61,0.1); border: 1px solid #D3C6AF; }
+        .bunpou-card h2 { text-align: left; margin-top: 0; color: #1B233D; font-size: 24px; border-bottom: 1px solid #E2D8C5; padding-bottom: 12px; }
         .bunpou-section { margin-top: 18px; }
-        .bunpou-section-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; color: #7f8c8d; margin-bottom: 8px; }
-        .bunpou-text { font-size: 15px; line-height: 1.6; color: #333; white-space: pre-line; }
-        .bunpou-example { background-color: #f8f9fa; border-left: 3px solid #3498db; padding: 10px 14px; border-radius: 6px; margin-bottom: 10px; }
-        .bunpou-jp { font-size: 17px; line-height: 2; color: #1e293b; margin: 0 0 4px 0; }
-        .bunpou-id { font-size: 14px; color: #555; margin: 0; }
-        .bunpou-tag { display: inline-block; font-size: 11px; font-weight: bold; color: #2980b9; background-color: #e8f4fc; padding: 2px 8px; border-radius: 10px; margin-bottom: 4px; }
+        .bunpou-section-title { font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.6px; color: #6B6356; margin-bottom: 8px; }
+        .bunpou-text { font-size: 15px; line-height: 1.6; color: #1B233D; white-space: pre-line; }
+        .bunpou-example { background-color: #F2ECE0; border-left: 3px solid #1B233D; padding: 10px 14px; border-radius: 6px; margin-bottom: 10px; }
+        .bunpou-jp { font-size: 17px; line-height: 2; color: #1B233D; margin: 0 0 4px 0; }
+        .bunpou-id { font-size: 14px; color: #4A4E5A; margin: 0; }
+        .bunpou-tag { display: inline-block; font-size: 11px; font-weight: bold; color: #E5D9C3; background-color: #1B233D; padding: 2px 8px; border-radius: 10px; margin-bottom: 4px; }
         ruby { ruby-align: center; }
-        rt { font-size: 0.6em; color: #64748b; }
+        rt { font-size: 0.6em; color: #6B6356; }
 
         @media (max-width: 480px) {
             .home-choices { grid-template-columns: 1fr; }
@@ -106,7 +120,7 @@
     <!-- HALAMAN HOME -->
     <div id="home-view">
         <h1>Aplikasi Belajar Bahasa Jepang</h1>
-        <p style="color:#666; margin-top:0;">Pilih materi yang ingin dipelajari</p>
+        <p style="color:#3D4663; margin-top:0;">Pilih materi yang ingin dipelajari</p>
         <div class="home-choices">
             <button class="home-card-btn btn-home-bunpou" onclick="openBunpou()">
                 <span>Bunpou</span>
@@ -123,6 +137,10 @@
     <div id="bunpou-list-view">
         <button class="btn-menu" onclick="goHome()">← Kembali ke Home</button>
         <h1 style="margin: 5px 0 10px 0;">Bunpou N3</h1>
+        <div class="kotoba-progress-info">
+            <span id="bunpou-progress-text">Paham: 0 / 48 Materi</span>
+            <button class="btn-reset-progress" onclick="resetBunpouProgress()">Reset Progres</button>
+        </div>
         <div class="bunpou-list" id="bunpou-list"></div>
     </div>
 
@@ -1604,7 +1622,15 @@
             const item = bunpouData.find(b => b.id === id);
             if (!item) return;
 
-            let html = `<h2>${item.title}</h2>`;
+            const isDone = loadDoneBunpou().includes(item.id);
+            let html = `
+                <div class="bunpou-detail-header">
+                    <h2>${item.title}</h2>
+                    <button class="btn-faham ${isDone ? 'is-done' : ''}" id="btn-faham-detail" onclick="toggleBunpouDone(${item.id})">
+                        ${isDone ? '✔ Sudah Paham' : 'Tandai Paham'}
+                    </button>
+                </div>
+            `;
 
             if (item.rumus) {
                 html += `
@@ -1671,15 +1697,61 @@
             document.getElementById("menu-view").style.display = "flex";
         }
 
+        // PENYIMPANAN PROGRES BUNPOU DI LOCALSTORAGE
+        const BUNPOU_STORAGE_KEY = "belajar_jepang_bunpou_done_v1";
+
+        function loadDoneBunpou() {
+            try {
+                const raw = localStorage.getItem(BUNPOU_STORAGE_KEY);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function toggleBunpouDone(id) {
+            try {
+                let list = loadDoneBunpou();
+                if (list.includes(id)) {
+                    list = list.filter(x => x !== id);
+                } else {
+                    list.push(id);
+                }
+                localStorage.setItem(BUNPOU_STORAGE_KEY, JSON.stringify(list));
+            } catch (e) {}
+            renderBunpouList();
+            const isDone = loadDoneBunpou().includes(id);
+            const btn = document.getElementById("btn-faham-detail");
+            if (btn) {
+                btn.className = isDone ? "btn-faham is-done" : "btn-faham";
+                btn.innerText = isDone ? "✔ Sudah Paham" : "Tandai Paham";
+            }
+        }
+
+        function resetBunpouProgress() {
+            try {
+                localStorage.removeItem(BUNPOU_STORAGE_KEY);
+            } catch (e) {}
+            renderBunpouList();
+        }
+
         // RENDER DAFTAR JUDUL BUNPOU
-        const bunpouListEl = document.getElementById("bunpou-list");
-        bunpouData.forEach(item => {
-            const btn = document.createElement("button");
-            btn.className = "bunpou-title-btn";
-            btn.innerText = item.title;
-            btn.onclick = () => openBunpouDetail(item.id);
-            bunpouListEl.appendChild(btn);
-        });
+        function renderBunpouList() {
+            const bunpouListEl = document.getElementById("bunpou-list");
+            const doneList = loadDoneBunpou();
+            bunpouListEl.innerHTML = "";
+            bunpouData.forEach(item => {
+                const isDone = doneList.includes(item.id);
+                const btn = document.createElement("button");
+                btn.className = isDone ? "bunpou-title-btn is-done" : "bunpou-title-btn";
+                btn.innerHTML = `<span>${item.title}</span>${isDone ? '<span class="bunpou-done-badge">✔ Paham</span>' : ''}`;
+                btn.onclick = () => openBunpouDetail(item.id);
+                bunpouListEl.appendChild(btn);
+            });
+            document.getElementById("bunpou-progress-text").innerText = `Paham: ${doneList.length} / ${bunpouData.length} Materi`;
+        }
+        renderBunpouList();
 
         // VARIABEL FLASHCARD KOTOBA
         let currentQueue = [];
@@ -1761,21 +1833,57 @@
             }
         }
 
-        // FUNGSI SUARA JEPANG (TEXT TO SPEECH)
+        // FUNGSI SUARA JEPANG (KOMPATIBEL IPHONE / IOS SAFARI)
+        let jaVoice = null;
+        function loadJaVoice() {
+            if (!('speechSynthesis' in window)) return;
+            const voices = window.speechSynthesis.getVoices();
+            if (voices && voices.length > 0) {
+                jaVoice = voices.find(v => v.lang && v.lang.toLowerCase().startsWith('ja')) || null;
+            }
+        }
+        if ('speechSynthesis' in window) {
+            loadJaVoice();
+            if (typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
+                window.speechSynthesis.onvoiceschanged = loadJaVoice;
+            }
+        }
+
+        function unlockIosSpeech() {
+            if (!('speechSynthesis' in window)) return;
+            try {
+                const u = new SpeechSynthesisUtterance('');
+                u.volume = 0;
+                window.speechSynthesis.speak(u);
+            } catch (e) {}
+        }
+
         function speakJapanese(text, event) {
             if (event) event.stopPropagation();
             if (!('speechSynthesis' in window) || !text) return;
 
-            window.speechSynthesis.cancel();
+            loadJaVoice();
             let cleanText = text.split("※")[0].trim();
 
-            const utterance = new SpeechSynthesisUtterance(cleanText);
-            utterance.lang = 'ja-JP';
-            utterance.rate = 0.95;
-            window.speechSynthesis.speak(utterance);
+            const doSpeak = () => {
+                const utterance = new SpeechSynthesisUtterance(cleanText);
+                utterance.lang = 'ja-JP';
+                if (jaVoice) utterance.voice = jaVoice;
+                utterance.rate = 0.95;
+                utterance.volume = 1;
+                window.speechSynthesis.speak(utterance);
+            };
+
+            if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+                window.speechSynthesis.cancel();
+                setTimeout(doSpeak, 60);
+            } else {
+                doSpeak();
+            }
         }
 
         function startSesi(dayNumber) {
+            unlockIosSpeech();
             stopAutoPlay();
             activeDay = dayNumber;
             currentQueue = [...kotobaData[dayNumber]];
@@ -1944,6 +2052,7 @@
         }
 
         function startAutoPlay() {
+            unlockIosSpeech();
             if (currentIndex >= currentQueue.length) return;
             isAutoPlaying = true;
             const btnPlay = document.getElementById("btn-play");
@@ -2002,6 +2111,47 @@
                 }, 1300);
             }
         });
+
+        // SETUP PWA MANIFEST & ICON AGAR BISA DI-INSTALL FULLSCREEN DI HP
+        (function setupPWA() {
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = 512;
+                canvas.height = 512;
+                const ctx = canvas.getContext("2d");
+                if (ctx) {
+                    ctx.fillStyle = "#1B233D";
+                    ctx.fillRect(0, 0, 512, 512);
+                    ctx.fillStyle = "#E5D9C3";
+                    ctx.font = "bold 160px sans-serif";
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "middle";
+                    ctx.fillText("N3", 256, 220);
+                    ctx.font = "bold 56px sans-serif";
+                    ctx.fillStyle = "#C7BA9F";
+                    ctx.fillText("EZZZ", 256, 340);
+                    const iconUrl = canvas.toDataURL("image/png");
+                    const appleIcon = document.getElementById("apple-icon");
+                    if (appleIcon) appleIcon.href = iconUrl;
+
+                    const manifest = {
+                        name: "N3 EZZZ - Belajar Bahasa Jepang",
+                        short_name: "N3 EZZZ",
+                        start_url: ".",
+                        display: "standalone",
+                        background_color: "#1B233D",
+                        theme_color: "#1B233D",
+                        icons: [
+                            { src: iconUrl, sizes: "192x192", type: "image/png" },
+                            { src: iconUrl, sizes: "512x512", type: "image/png" }
+                        ]
+                    };
+                    const blob = new Blob([JSON.stringify(manifest)], { type: "application/manifest+json" });
+                    const manifestEl = document.getElementById("pwa-manifest");
+                    if (manifestEl) manifestEl.href = URL.createObjectURL(blob);
+                }
+            } catch (e) {}
+        })();
     </script>
 </body>
 </html>
